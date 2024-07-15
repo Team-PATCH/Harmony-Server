@@ -28,6 +28,38 @@ const getMemoryCards = (req, res) => {
     res.json(response);
 };
 
+const getMemoryCardById = (req, res) => {
+    const memorycardId = parseInt(req.params.memorycardId);
+
+    // 더미 데이터 (실제 구현에서는 데이터베이스에서 조회해야 합니다)
+    const memoryCard = {
+        memorycardId: memorycardId,
+        title: "특별한 추억",
+        dateTime: "2023-07-20T15:30:00Z",
+        tag: ["가족", "여행", "여름"],
+        image: "https://example.com/special_memory.jpg",
+        description: "가족과 함께한 즐거운 여름 휴가의 추억입니다."
+    };
+
+    // memorycardId가 유효한지 확인 (여기서는 간단히 1 이상인지만 체크)
+    if (memorycardId && memorycardId > 0) {
+        const response = {
+            status: true,
+            ...memoryCard,
+            message: "메모리 카드를 성공적으로 불러왔습니다."
+        };
+        res.json(response);
+    } else {
+        const response = {
+            status: false,
+            message: "유효하지 않은 메모리 카드 ID입니다."
+        };
+        res.status(404).json(response);
+    }
+};
+
+
 module.exports = {
     getMemoryCards
+    ,getMemoryCardById
 };
