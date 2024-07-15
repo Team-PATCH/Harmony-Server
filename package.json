@@ -2,9 +2,9 @@
   "name": "harmony-server",
   "version": "0.0.0",
   "description": "하모니 Backend Service",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node src/app.js"
   },
   "author": "",
   "license": "ISC",
