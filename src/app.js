@@ -1,5 +1,5 @@
-// const sync = require('./models/sync');
-// sync();
+const sync = require('./models/sync');
+sync();
 
 const express = require('express');
 const morgan = require('morgan');
@@ -9,7 +9,7 @@ dotenv.config();
 const mcRouter = require('./routes/mcRoutes');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 console.log('PORT:', process.env.PORT);
 
