@@ -39,6 +39,9 @@ class Group extends Sequelize.Model {
 
   static associate(db) {
     db.Group.hasMany(db.UserGroup, { foreignKey: 'groupId', sourceKey: 'groupId' });
+    db.Group.hasMany(db.MemoryCard, { foreignKey: 'groupId', sourceKey: 'groupId' });
+    db.Group.hasMany(db.Routine, { foreignKey: 'groupId', sourceKey: 'groupId' });
+    db.Group.hasMany(db.Question, { foreignKey: 'groupId', sourceKey: 'groupId' });
   }
 }
 

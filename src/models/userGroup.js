@@ -35,7 +35,7 @@ class UserGroup extends Sequelize.Model {
         timestamps: true,
         paranoid: true,
         modelName: 'UserGroup',
-        tableName: 'userGroup',
+        tableName: 'usergroup',
       }
     );
   }

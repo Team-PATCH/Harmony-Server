@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+const Sequelize = require("sequelize");
 
 class Comment extends Sequelize.Model {
   static init(sequelize) {
@@ -13,12 +13,14 @@ class Comment extends Sequelize.Model {
         questionId: {
           type: Sequelize.INTEGER,
           allowNull: false,
-          primaryKey: true,
         },
         groupId: {
           type: Sequelize.INTEGER,
           allowNull: false,
-          primaryKey: true,
+        },
+        authorId: {
+          type: Sequelize.STRING(50),
+          allowNull: false,
         },
         content: {
           type: Sequelize.STRING(100),
@@ -29,15 +31,17 @@ class Comment extends Sequelize.Model {
         sequelize,
         timestamps: true,
         paranoid: true,
-        modelName: 'Comment',
-        tableName: 'comment',
+        modelName: "Comment",
+        tableName: "comment",
       }
     );
   }
 
   static associate(db) {
-    // db.Comment.belongsTo(db.Question, { foreignKey: 'groupId', targetKey: 'groupId'});
-    db.Comment.belongsTo(db.Question, { foreignKey: ['questionId', 'groupId'], targetKey: ['questionId', 'groupId']});
+    db.Comment.belongsTo(db.Question, {
+      foreignKey: "questionId",
+      targetKey: "questionId",
+    });
   }
 }
 

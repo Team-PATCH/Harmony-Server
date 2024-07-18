@@ -1,40 +1,40 @@
 const { Sequelize } = require('sequelize');
 
-class MemoryCard extends Sequelize.Model {
+class DailyRoutine extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
-        mcId: {
+        dailyId: {
           type: Sequelize.INTEGER,
           allowNull: false,
           primaryKey: true,
           autoIncrement: true, // 자동 증가 설정
         },
+        routineId: {
+          type: Sequelize.INTEGER,
+          allowNull: false,
+        },
         groupId: {
           type: Sequelize.INTEGER,
           allowNull: false,
         },
-        title: {
-          type: Sequelize.STRING(20),
+        time: {
+          type: Sequelize.DATE,
           allowNull: false,
         },
-        year: {
-          type: Sequelize.STRING(10),
-          allowNull: false,
-        },
-        image: {
+        completedPhoto: {
           type: Sequelize.STRING(200),
-          allowNull: false,
+          allowNull: true,
         },
-        summary: {
-          type: Sequelize.STRING(1000),
+        completedTime: {
+          type: Sequelize.DATE,
           allowNull: true,
         },
       },
       {
         sequelize,
-        modelName: 'MemoryCard',
-        tableName: 'memorycard',
+        modelName: 'DailyRoutine',
+        tableName: 'dailyroutine',
         timestamps: true,
         paranoid: true,
       }
@@ -42,13 +42,15 @@ class MemoryCard extends Sequelize.Model {
   }
 
   static associate(db) {
-    db.MemoryCard.belongsTo(db.Group, {
-      foreignKey: 'groupId',
-      targetKey: 'groupId'
+    db.DailyRoutine.belongsTo(db.Routine, {
+      foreignKey: 'routineId',
+      targetKey: 'routineId',
     });
-    db.MemoryCard.hasOne(db.ChatSession, { foreignKey: 'mcId', sourceKey: 'mcId'})
-    db.MemoryCard.hasMany(db.Tag, { foreignKey: 'mcId', sourceKey: 'mcId'})
+    db.DailyRoutine.hasMany(db.RoutineReaction, {
+        foreignKey: 'dailyId',
+        sourceKey: 'dailyId',
+    })
   }
 }
 
-module.exports = MemoryCard;
+module.exports = DailyRoutine;

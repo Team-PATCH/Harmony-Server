@@ -13,7 +13,6 @@ class Question extends Sequelize.Model {
         groupId: {
           type: Sequelize.INTEGER,
           allowNull: false,
-          primaryKey: true,
         },
         question: {
           type: Sequelize.STRING(50),
@@ -44,8 +43,8 @@ class Question extends Sequelize.Model {
 
   static associate(db) {
     db.Question.belongsTo(db.Group, { foreignKey: 'groupId', targetKey: 'groupId' });
-    // db.Question.hasMany(db.Comment, { foreignKey: 'groupId', sourceKey: 'groupId'});
-    db.Question.hasMany(db.Comment, { foreignKey: ['questionId','groupId'], sourceKey: ['questionId','groupId']});
+    db.Question.hasMany(db.Comment, { foreignKey: 'questionId', sourceKey: 'questionId'});
+
   }
 }
 

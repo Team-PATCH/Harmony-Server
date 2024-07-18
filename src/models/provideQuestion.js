@@ -20,7 +20,7 @@ class ProvideQuestion extends Sequelize.Model {
         timestamps: true,
         paranoid: true,
         modelName: 'ProvideQuestion',
-        tableName: 'provideQuestion',
+        tableName: 'providequestion',
       }
     );
   }
