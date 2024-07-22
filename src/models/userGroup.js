@@ -8,6 +8,7 @@ class UserGroup extends Sequelize.Model {
           type: Sequelize.INTEGER,
           allowNull: false,
           primaryKey: true,
+          autoIncrement: true,
         },
         userId: {
           type: Sequelize.STRING(50),
