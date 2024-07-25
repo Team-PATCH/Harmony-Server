@@ -105,3 +105,16 @@ const getQuestionDetail = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // 질문카드 코멘트를 가져오는 함수
+const getComments = async (req, res) => {
+    try {
+      const comments = await Comment.findAll({
+        where: { questionId: req.params.questionId },
+        order: [["createdAt", "DESC"]],
+      });
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
