@@ -95,3 +95,13 @@ const getAllQuestions = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // 질문카드 상세정보를 가져오는 함수
+const getQuestionDetail = async (req, res) => {
+    try {
+      const question = await Question.findByPk(req.params.questionId);
+      res.json(question);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
