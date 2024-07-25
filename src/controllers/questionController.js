@@ -131,3 +131,29 @@ const postAnswer = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // 질문카드 코멘트를 생성하는 함수
+const postComment = async (req, res) => {
+    try {
+      console.log("Received comment data:", req.body); // 요청 데이터 로깅
+  
+      // 필요한 필드가 모두 있는지 확인
+      const { questionId, groupId, authorId, content } = req.body;
+      if (!questionId || !groupId || !authorId || !content) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+  
+      const comment = await Comment.create({
+        questionId,
+        groupId,
+        authorId,
+        content,
+      });
+  
+      console.log("Created comment:", comment.toJSON()); // 생성된 댓글 로깅
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error in postComment:", error); // 오류 상세 로깅
+      res.status(500).json({ message: error.message });
+    }
+  };
