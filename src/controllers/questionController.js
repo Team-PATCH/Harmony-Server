@@ -68,3 +68,17 @@ const getCurrentQuestion = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // 가장 최근 질문 세개를 가져오는 함수
+const getQuestions = async (req, res) => {
+    try {
+      const questions = await Question.findAll({
+        where: { groupId: req.params.groupId },
+        order: [["answeredAt", "ASC"]],
+        limit: 3,
+      });
+      res.json(questions);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
