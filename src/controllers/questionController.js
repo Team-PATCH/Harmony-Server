@@ -118,3 +118,16 @@ const getComments = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // 답변 저장 함수
+const postAnswer = async (req, res) => {
+    try {
+      const question = await Question.findByPk(req.params.questionId);
+      question.answer = req.body.answer;
+      question.answeredAt = new Date();
+      await question.save();
+      res.json(question);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
