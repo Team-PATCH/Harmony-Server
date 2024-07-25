@@ -82,3 +82,16 @@ const getQuestions = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // 모든 질문목록을 가져오는 함수
+const getAllQuestions = async (req, res) => {
+    try {
+      const questions = await Question.findAll({
+        where: { groupId: req.params.groupId },
+        order: [["createdAt", "DESC"]],
+      });
+      res.json(questions);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
