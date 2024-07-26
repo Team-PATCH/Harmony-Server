@@ -16,6 +16,8 @@ router.get('/question/:questionId', questionController.getQuestionDetail);
 router.get('/comments/:questionId', questionController.getComments);
 //질문카드 답변 저장
 router.post('/answer/:questionId', questionController.postAnswer);
+//질문카드 답변 수정
+router.post('/updateanswer/:questionId', questionController.updateAnswer);
 //질문카드 코멘트 저장
 router.post('/comment', questionController.postComment);
 

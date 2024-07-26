@@ -132,6 +132,33 @@ const postAnswer = async (req, res) => {
     }
   };
 
+  // 답변 수정 함수
+const updateAnswer = async (req, res) => {
+  try {
+    const questionId = req.params.questionId;
+    const { answer } = req.body;
+    
+    if (!answer) {
+      return res.status(400).json({ message: "Answer is required" });
+    }
+
+    const question = await Question.findByPk(questionId);
+    
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    question.answer = answer;
+    question.answeredAt = new Date(); // 답변 시간 업데이트
+    await question.save();
+
+    res.json(question);
+  } catch (error) {
+    console.error("Error in updateAnswer:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
   // 질문카드 코멘트를 생성하는 함수
 const postComment = async (req, res) => {
     try {
@@ -158,6 +185,48 @@ const postComment = async (req, res) => {
     }
   };
 
+  // 다음 질문을 가져오는 함수
+const getNextQuestion = async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    
+    // 답변되지 않은 다음 질문 찾기
+    let nextQuestion = await Question.findOne({
+      where: {
+        groupId: groupId,
+        answer: null,
+      },
+      order: [["pqid", "ASC"]],
+    });
+
+    // 답변되지 않은 질문이 없으면 새 질문 생성
+    if (!nextQuestion) {
+      const provideQuestion = await ProvideQuestion.findOne({
+        order: [["pqid", "ASC"]],
+      });
+
+      if (provideQuestion) {
+        nextQuestion = await Question.create({
+          groupId: groupId,
+          question: provideQuestion.question,
+          askedAt: new Date(),
+        });
+
+        await provideQuestion.destroy();
+      }
+    }
+
+    if (nextQuestion) {
+      res.json(nextQuestion);
+    } else {
+      res.status(404).json({ message: "No more questions available" });
+    }
+  } catch (error) {
+    console.error("Error in getNextQuestion:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
   module.exports = {
     getProvideQuestion,
     getCurrentQuestion,
@@ -166,5 +235,7 @@ const postComment = async (req, res) => {
     getQuestionDetail,
     getComments,
     postAnswer,
+    updateAnswer,
     postComment,
+    getNextQuestion,
   };
