@@ -8,11 +8,11 @@ const { Sequelize } = require("sequelize");
 const getProvideQuestion = async (req, res) => {
     try {
       const provideQuestion = await ProvideQuestion.findOne({
-        order: [["createdAt", "ASC"]],
+        order: [["pqid", "ASC"]],
       });
-      console.log("Retrieved question:", provideQuestion); // 추가된 로그
+      console.log("Retrieved question:", provideQuestion);
       if (!provideQuestion) {
-        console.log("No questions found in the database"); // 추가된 로그
+        console.log("No questions found in the database");
         return res.status(404).json({ message: "No questions found" });
       }
       res.json(provideQuestion);
@@ -22,7 +22,7 @@ const getProvideQuestion = async (req, res) => {
     }
   };
 
-  // 현재 답변되지 않은 가장 최근 질문을 가져오는 함수
+  // 현재 답변되지 않은 질문을 가져오는 함수
 const getCurrentQuestion = async (req, res) => {
     try {
       const groupId = req.params.groupId;
@@ -33,14 +33,14 @@ const getCurrentQuestion = async (req, res) => {
           groupId: groupId,
           answer: null,
         },
-        order: [["createdAt", "ASC"]],
+        order: [["questionId", "DESC"]],
       });
   
       // 답변되지 않은 질문이 없으면 새 질문 생성
       if (!question) {
-        // ProvideQuestion에서 가장 오래된 질문 선택
+        // ProvideQuestion에서 질문 가져오기
         const provideQuestion = await ProvideQuestion.findOne({
-          order: [["createdAt", "ASC"]], // 가장 오래된 질문 선택
+          order: [["pqid", "ASC"]],
         });
   
         if (provideQuestion) {
@@ -74,7 +74,7 @@ const getQuestions = async (req, res) => {
     try {
       const questions = await Question.findAll({
         where: { groupId: req.params.groupId },
-        order: [["answeredAt", "ASC"]],
+        order: [["questionId", "DESC"]],
         limit: 3,
       });
       res.json(questions);
@@ -88,7 +88,7 @@ const getAllQuestions = async (req, res) => {
     try {
       const questions = await Question.findAll({
         where: { groupId: req.params.groupId },
-        order: [["createdAt", "DESC"]],
+        order: [["questionId", "DESC"]],
       });
       res.json(questions);
     } catch (error) {
