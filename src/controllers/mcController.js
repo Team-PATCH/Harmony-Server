@@ -1,7 +1,16 @@
 // controllers/mcController.js
+const APNsController = require('../utils/apn');
+const apns = new APNsController();
 
 const getMemoryCards = (req, res) => {
     // 더미 데이터 생성
+    apns.sendNotification('안녕하세요 이건 얼럿부분','이건 페이로드 부분이죠', '326041e35c59c1335bcb4071efbfa307afda190db88873432db30776443b2518')
+    .then(result => {
+        console.log('알림 전송 성공:', result);
+      })
+      .catch(error => {
+        console.error('알림 전송 실패:', error);
+      }); 
     const memoryCards = [
         {
             memorycardId: 1,
