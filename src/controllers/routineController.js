@@ -1,24 +1,37 @@
-const Routine = require("../models/routine")
-const DailyRoutine = require("../models/dailyRoutine")
-const RoutineReaction = require("../models/routionReaction")
+const Routine = require("../models/routine");
+const DailyRoutine = require("../models/dailyRoutine");
+const RoutineReaction = require("../models/routionReaction");
 const dayjs = require("dayjs");
 
 // 일과 목록을 가져오는 함수
 const getRoutines = async (req, res) => {
+    console.log("get routines");
     try {
         const routines = await Routine.findAll({
-            order: [["id", "ASC"]],
+            order: [["routineId", "ASC"]],
         });
         console.log("Retrieved routines:", routines);
-        
+
         if (!routines || routines.length === 0) {
             console.log("No routines found in the database");
-            return res.status(404).json({ message: "No routines found" });
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "No routines found"
+            });
         }
-        res.json(routines);
+        res.json({
+            status: true,
+            data: routines,
+            message: "Routines retrieved successfully"
+        });
     } catch (error) {
         console.error("Error in getRoutines:", error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
     }
 };
 
@@ -38,15 +51,27 @@ const createRoutine = async (req, res) => {
             if ((days & (1 << (6 - weekday))) !== 0) { // 요일에 해당하는 비트가 1이면
                 await DailyRoutine.create({
                     date: date.toDate(),
-                    routineId: newRoutine.id
+                    routineId: newRoutine.routineId,
+                    groupId: newRoutine.groupId,
+                    time: newRoutine.time,
+                    completedPhoto: null,
+                    completedTime: null
                 });
             }
         }
 
-        res.status(201).json(newRoutine);
+        res.status(201).json({
+            status: true,
+            data: newRoutine,
+            message: "Routine created successfully"
+        });
     } catch (error) {
         console.error("Error in createRoutine:", error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
     }
 };
 
@@ -61,12 +86,24 @@ const getDailyRoutines = async (req, res) => {
         console.log("Retrieved daily routines:", dailyRoutines);
         if (!dailyRoutines || dailyRoutines.length === 0) {
             console.log("No daily routines found for the given routine ID");
-            return res.status(404).json({ message: "No daily routines found" });
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "No daily routines found"
+            });
         }
-        res.json(dailyRoutines);
+        res.json({
+            status: true,
+            data: dailyRoutines,
+            message: "Daily routines retrieved successfully"
+        });
     } catch (error) {
         console.error("Error in getDailyRoutines:", error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
     }
 };
 

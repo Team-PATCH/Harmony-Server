@@ -10,6 +10,7 @@ const db = require('./models');
 
 const mcRouter = require('./routes/mcRoutes');
 const questionRouter = require('./routes/questionRoutes');
+const routineRouter = require('./routes/routineRoutes')
 
 const app = express();
 const port = process.env.PORT;
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/mc', mcRouter);
 app.use('/qc', questionRouter);
+app.use('/routine', routineRouter)
 
 app.get('/', (req, res) => {
   res.send('엔드포인트임 이게 나온다면 뭔가 문제가 있다')
