@@ -2,6 +2,9 @@ const ProvideQuestion = require("../models/provideQuestion");
 const Question = require("../models/question");
 const Comment = require("../models/comment");
 
+const APNsController = require('../utils/apn');
+const apns = new APNsController();
+
 const { Sequelize } = require("sequelize");
 
 // 제공된 질문을 가져오는 함수
@@ -121,16 +124,37 @@ const getComments = async (req, res) => {
 
   // 답변 저장 함수
 const postAnswer = async (req, res) => {
+  try {
+    const question = await Question.findByPk(req.params.questionId);
+    question.answer = req.body.answer;
+    question.answeredAt = new Date();
+    await question.save();
+
+    // APNS 알림 보내기
+    const alert = "새로운 답변이 등록되었습니다!";
+    const payload = {
+      questionId: question.questionId,
+      question: question.question,
+      answer: question.answer
+    };
+    
+    // 여기서는 테스트를 위해 하드코딩된 디바이스 토큰을 사용합니다.
+    // 실제 구현시에는 데이터베이스에서 해당 그룹의 모든 사용자의 디바이스 토큰을 가져와야 합니다.
+    const deviceToken = 'afbdb1b78d281a7682e059f8fef3570b1bfd7071f6808ab526e7764c7267ef3d';
+
     try {
-      const question = await Question.findByPk(req.params.questionId);
-      question.answer = req.body.answer;
-      question.answeredAt = new Date();
-      await question.save();
-      res.json(question);
+      const result = await apns.sendNotification(alert, payload, deviceToken);
+      console.log('APNS 알림 전송 성공:', result);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error('APNS 알림 전송 실패:', error);
     }
-  };
+
+    res.json(question);
+  } catch (error) {
+    console.error("Error in postAnswer:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
   // 답변 수정 함수
 const updateAnswer = async (req, res) => {
