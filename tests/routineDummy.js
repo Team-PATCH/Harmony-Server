@@ -24,24 +24,24 @@ async function routineDummy() {
       { groupId: group.groupId, title: "요리하기", photo: "https://example.com/photo3.jpg", day: 0b1000000, time: new Date() }
     ];
 
-    for (const routine of routines) {
-      const createdRoutine = await Routine.create(routine);
+    // for (const routine of routines) {
+    //   const createdRoutine = await Routine.create(routine);
 
-      // DailyRoutine 생성
-      const startDate = dayjs();
-      const endDate = dayjs().add(1, 'month'); // 한 달 동안의 루틴 생성
+    //   // DailyRoutine 생성
+    //   const startDate = dayjs();
+    //   const endDate = dayjs().add(1, 'month'); // 한 달 동안의 루틴 생성
 
-      for (let date = startDate; date.isBefore(endDate); date = date.add(1, 'day')) {
-        const weekday = date.day(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
-        if ((routine.days & (1 << (6 - weekday))) !== 0) { // 요일에 해당하는 비트가 1이면
-          await DailyRoutine.create({
-            routineId: createdRoutine.routineId,
-            groupId: routine.groupId,
-            time: date.toDate()
-          });
-        }
-      }
-    }
+    //   for (let date = startDate; date.isBefore(endDate); date = date.add(1, 'day')) {
+    //     const weekday = date.day(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+    //     if ((routine.day & (1 << (6 - weekday))) !== 0) { // 요일에 해당하는 비트가 1이면
+    //       await DailyRoutine.create({
+    //         routineId: createdRoutine.routineId,
+    //         groupId: routine.groupId,
+    //         time: date.toDate()
+    //       });
+    //     }
+    //   }
+    // }
 
     console.log('Routines and DailyRoutines created successfully.');
 

@@ -2,15 +2,21 @@ const Routine = require("../models/routine");
 const DailyRoutine = require("../models/dailyRoutine");
 const RoutineReaction = require("../models/routionReaction");
 const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+
+// 플러그인 사용 설정
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // 일과 목록을 가져오는 함수
 const getRoutines = async (req, res) => {
-    console.log("get routines");
+    console.log(dayjs().tz().format());
     try {
         const routines = await Routine.findAll({
             order: [["routineId", "ASC"]],
         });
-        console.log("Retrieved routines:", routines);
+        // console.log("Retrieved routines:", routines);
 
         if (!routines || routines.length === 0) {
             console.log("No routines found in the database");
@@ -75,23 +81,36 @@ const createRoutine = async (req, res) => {
     }
 };
 
-// 특정 일과의 DailyRoutine 목록을 가져오는 함수
+// 특정 요일에 해당하는 DailyRoutine 목록을 가져오는 함수
 const getDailyRoutines = async (req, res) => {
     try {
-        const { routineId } = req.params;
-        const dailyRoutines = await DailyRoutine.findAll({
-            where: { routineId },
-            order: [["date", "ASC"]],
-        });
-        console.log("Retrieved daily routines:", dailyRoutines);
+        const today = dayjs().tz("Asia/Seoul");
+        const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+
+        // 오늘 날짜의 요일에 해당하는 루틴 조회
+        const routines = await Routine.findAll();
+        const todayRoutines = routines.filter(routine => (routine.day & (1 << (6 - weekday))) !== 0);
+
+        // DailyRoutine 생성
+        const dailyRoutines = await Promise.all(todayRoutines.map(async routine => {
+            const dailyRoutine = await DailyRoutine.create({
+                routineId: routine.routineId,
+                groupId: routine.groupId,
+                time: today.toDate(),
+                completedPhoto: null,
+                completedTime: null
+            });
+            return dailyRoutine;
+        }));
+
         if (!dailyRoutines || dailyRoutines.length === 0) {
-            console.log("No daily routines found for the given routine ID");
             return res.status(404).json({
                 status: false,
                 data: [],
-                message: "No daily routines found"
+                message: "No daily routines found for today"
             });
         }
+
         res.json({
             status: true,
             data: dailyRoutines,
