@@ -18,16 +18,16 @@ async function routineDummy() {
 
     // Routine 데이터 생성
     const routines = [
-      { groupId: group.groupId, title: "하율이 등원 시키기", photo: "https://example.com/photo2.jpg", day: 0b1111100, time: new Date() },
-      { groupId: group.groupId, title: "공원 산책가서 비둘기 사진 찍기", photo: "https://example.com/photo2.jpg", day: 0b1100000, time: new Date() },
-      { groupId: group.groupId, title: "문화센터 서예 교실 가기", photo: "https://example.com/photo2.jpg", day: 0b0000011, time: new Date() },
-      { groupId: group.groupId, title: "요리하기", photo: "https://example.com/photo3.jpg", day: 0b1000000, time: new Date() }
+      { groupId: group.groupId, title: "하율이 등원 시키기", photo: "https://example.com/photo2.jpg", days: 0b1111100, time: new Date() },
+      { groupId: group.groupId, title: "공원 산책가서 비둘기 사진 찍기", photo: "https://example.com/photo2.jpg", days: 0b1100000, time: new Date() },
+      { groupId: group.groupId, title: "문화센터 서예 교실 가기", photo: "https://example.com/photo2.jpg", days: 0b0000011, time: new Date() },
+      { groupId: group.groupId, title: "요리하기", photo: "https://example.com/photo3.jpg", days: 0b1000000, time: new Date() }
     ];
 
-    // for (const routine of routines) {
-    //   const createdRoutine = await Routine.create(routine);
+    for (const routine of routines) {
+      const createdRoutine = await Routine.create(routine);
 
-    //   // DailyRoutine 생성
+      // DailyRoutine 생성
     //   const startDate = dayjs();
     //   const endDate = dayjs().add(1, 'month'); // 한 달 동안의 루틴 생성
 
@@ -41,7 +41,7 @@ async function routineDummy() {
     //       });
     //     }
     //   }
-    // }
+    }
 
     console.log('Routines and DailyRoutines created successfully.');
 
