@@ -1,4 +1,5 @@
 const Routine = require("../models/routine");
+const DailyRoutine = require("../models/dailyRoutine")
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -53,39 +54,6 @@ const createRoutine = async (req, res) => {
         });
     } catch (error) {
         console.error("Error in createRoutine:", error);
-        res.status(500).json({
-            status: false,
-            data: [],
-            message: error.message
-        });
-    }
-};
-
-// 특정 요일에 해당하는 DailyRoutine 목록을 가져오는 함수
-const getDailyRoutines = async (req, res) => {
-    try {
-        const today = dayjs().tz("Asia/Seoul");
-        const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
-
-        // 오늘 날짜의 요일에 해당하는 루틴 조회
-        const routines = await Routine.findAll();
-        const todayRoutines = routines.filter(routine => (routine.days & (1 << (6 - weekday))) !== 0);
-
-        if (!todayRoutines || todayRoutines.length === 0) {
-            return res.status(404).json({
-                status: false,
-                data: [],
-                message: "No daily routines found for today"
-            });
-        }
-
-        res.json({
-            status: true,
-            data: todayRoutines,
-            message: "Daily routines retrieved successfully"
-        });
-    } catch (error) {
-        console.error("Error in getDailyRoutines:", error);
         res.status(500).json({
             status: false,
             data: [],
@@ -167,7 +135,6 @@ const deleteRoutine = async (req, res) => {
 module.exports = {
     getRoutines,
     createRoutine,
-    getDailyRoutines,
     updateRoutine,
-    deleteRoutine
+    deleteRoutine,
 };
