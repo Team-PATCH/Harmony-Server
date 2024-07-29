@@ -28,7 +28,7 @@ class RoutineReaction extends Sequelize.Model {
         },
         photo: {
           type: Sequelize.STRING(200),
-          allowNull: false,
+          allowNull: true,
         },
         comment: {
           type: Sequelize.STRING(200),

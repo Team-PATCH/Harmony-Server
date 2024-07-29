@@ -5,13 +5,9 @@ class User extends Sequelize.Model {
     return super.init(
       {
         userId: {
-          type: Sequelize.STRING(50),
+          type: Sequelize.STRING(100),
           allowNull: false,
           primaryKey: true,
-        },
-        password: {
-          type: Sequelize.STRING(160),
-          allowNull: false,
         },
         nick: {
           type: Sequelize.STRING(10),
@@ -19,8 +15,29 @@ class User extends Sequelize.Model {
         },
         profile: {
           type: Sequelize.STRING(200),
+          allowNull: true,
+        },
+        authProvider: {
+          type: Sequelize.ENUM('kakao', 'apple'),
           allowNull: false,
         },
+        socialToken: {
+          type: Sequelize.STRING(300),
+          allowNull: true,
+        },
+        refreshToken: {
+          type: Sequelize.STRING(300),
+          allowNull: true,
+        },
+        socialTokenExpiredAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+        },
+        lastLoginAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+        },
+
       },
       {
         sequelize,
