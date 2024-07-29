@@ -42,8 +42,8 @@ const getRoutines = async (req, res) => {
 // 일과를 생성하는 함수
 const createRoutine = async (req, res) => {
     try {
-        const { groupId, title, description, startDate, endDate, days, time } = req.body;
-        const newRoutine = await Routine.create({ groupId, title, description, startDate, endDate, days, time });
+        const { groupId, title, days, time } = req.body;
+        const newRoutine = await Routine.create({ groupId, title, days, time });
         console.log("Created routine:", newRoutine);
 
         res.status(201).json({

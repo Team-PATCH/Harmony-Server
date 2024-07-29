@@ -18,10 +18,10 @@ async function routineDummy() {
 
     // Routine 데이터 생성
     const routines = [
-      { groupId: group.groupId, title: "하율이 등원 시키기", photo: "https://example.com/photo2.jpg", days: 0b1111100, time: new Date() },
-      { groupId: group.groupId, title: "공원 산책가서 비둘기 사진 찍기", photo: "https://example.com/photo2.jpg", days: 0b1100000, time: new Date() },
-      { groupId: group.groupId, title: "문화센터 서예 교실 가기", photo: "https://example.com/photo2.jpg", days: 0b0000011, time: new Date() },
-      { groupId: group.groupId, title: "요리하기", photo: "https://example.com/photo3.jpg", days: 0b1000000, time: new Date() }
+      { groupId: group.groupId, title: "하율이 등원 시키기", days: 0b1111100, time: new Date() },
+      { groupId: group.groupId, title: "공원 산책가서 비둘기 사진 찍기", days: 0b1100000, time: new Date() },
+      { groupId: group.groupId, title: "문화센터 서예 교실 가기", days: 0b0000011, time: new Date() },
+      { groupId: group.groupId, title: "요리하기", days: 0b1000000, time: new Date() }
     ];
 
     for (const routine of routines) {
