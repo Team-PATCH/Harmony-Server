@@ -4,10 +4,24 @@ const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const { Op } = require("sequelize");
+const multer = require("multer");
+const path = require("path");
 
 // 플러그인 사용 설정
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+// multer 설정
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // 파일 저장 경로
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+
+const upload = multer({ storage });
 
 // 오늘 날짜의 데일리 일과 조회
 const getTodayDailyRoutines = async (req, res) => {
@@ -48,42 +62,6 @@ const getTodayDailyRoutines = async (req, res) => {
     }
 };
 
-// 데일리 일과 인증 (proving)
-const provingDailyRoutine = async (req, res) => {
-    try {
-        const { dailyId } = req.params;
-        const { completedPhoto } = req.body;
-
-        const dailyRoutine = await DailyRoutine.findByPk(dailyId);
-        if (!dailyRoutine) {
-            return res.status(404).json({
-                status: false,
-                data: [],
-                message: "Daily routine not found"
-            });
-        }
-
-        dailyRoutine.completedPhoto = completedPhoto;
-        dailyRoutine.completedTime = dayjs().tz("Asia/Seoul").toDate();
-
-        await dailyRoutine.save();
-        console.log("Proved daily routine:", dailyRoutine);
-
-        res.json({
-            status: true,
-            data: dailyRoutine,
-            message: "Daily routine proved successfully"
-        });
-    } catch (error) {
-        console.error("Error in provingDailyRoutine:", error);
-        res.status(500).json({
-            status: false,
-            data: [],
-            message: error.message
-        });
-    }
-};
-
 // 오늘의 요일에 해당하는 데일리 일과 생성 함수
 const createDailyRoutines = async () => {
     try {
@@ -113,15 +91,44 @@ const createDailyRoutines = async () => {
     }
 };
 
-module.exports = {
-    getTodayDailyRoutines,
-    provingDailyRoutine,
-    createDailyRoutines
-};
+// 데일리 일과 인증 (proving)
+const provingDailyRoutine = async (req, res) => {
+    try {
+        const { dailyId } = req.params;
+        const dailyRoutine = await DailyRoutine.findByPk(dailyId);
+        if (!dailyRoutine) {
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "Daily routine not found"
+            });
+        }
 
+        const completedPhoto = req.file ? req.file.path : null;
+        dailyRoutine.completedPhoto = completedPhoto;
+        dailyRoutine.completedTime = dayjs().tz("Asia/Seoul").toDate();
+
+        await dailyRoutine.save();
+        console.log("Proved daily routine:", dailyRoutine);
+
+        res.json({
+            status: true,
+            data: dailyRoutine,
+            message: "Daily routine proved successfully"
+        });
+    } catch (error) {
+        console.error("Error in provingDailyRoutine:", error);
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
+    }
+};
 
 module.exports = {
     createDailyRoutines,
     getTodayDailyRoutines,
-    provingDailyRoutine
+    provingDailyRoutine,
+    upload
 };
