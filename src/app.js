@@ -8,7 +8,7 @@ const cron = require('node-cron');
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
-const { createDailyRoutines } = require('./controllers/routineController');
+const { createDailyRoutines } = require('./controllers/dailyRoutineController');
 dotenv.config();
 
 const db = require('./models');
@@ -55,14 +55,14 @@ cron.schedule('0 * * * *', async () => {
   }
 });
 
-// // 매일 오후 2시 56분에 데일리 일과 생성 - 테스트용, 테스트 완료 이후 삭제
-// const cronExpression = '56 14 * * *';
+// // 매일 오후 5시 13분에 데일리 일과 생성 - 테스트용, 테스트 완료 이후 삭제
+// const cronExpression = '18 17 * * *';
 
-// console.log('Scheduled job will run daily at 14:56 KST');
+// console.log('Scheduled job will run daily at 17:18 KST');
 
 // // 특정 시간에 데일리 일과 생성
 // cron.schedule(cronExpression, async () => {
-//   console.log('Running daily routine creation job at 14:56 KST');
+//   console.log('Running daily routine creation job at 17:18 KST');
 //   await createDailyRoutines();
 // });
 

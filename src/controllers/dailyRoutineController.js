@@ -1,5 +1,6 @@
-const DailyRoutine = require("../models/dailyRoutine");
 const Routine = require("../models/routine");
+const DailyRoutine = require("../models/dailyRoutine");
+const RoutineReaction = require("../models/routionReaction")
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -91,7 +92,7 @@ const createDailyRoutines = async () => {
     }
 };
 
-// 데일리 일과 인증 (proving)
+// 데일리 일과 인증
 const provingDailyRoutine = async (req, res) => {
     try {
         const { dailyId } = req.params;
@@ -126,9 +127,51 @@ const provingDailyRoutine = async (req, res) => {
     }
 };
 
+// 리액션 추가
+const addReaction = async (req, res) => {
+    try {
+        const { dailyId } = req.params;
+        const { routineId, groupId, authorId, photo, comment } = req.body;
+
+        const dailyRoutine = await DailyRoutine.findByPk(dailyId);
+        if (!dailyRoutine) {
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "Daily routine not found"
+            });
+        }
+
+        const reaction = await RoutineReaction.create({
+            dailyId,
+            routineId,
+            groupId,
+            authorId,
+            photo,
+            comment
+        });
+
+        res.json({
+            status: true,
+            data: reaction,
+            message: "Reaction added successfully"
+        });
+    } catch (error) {
+        console.error("Error in addReaction:", error);
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
+    }
+};
+
+
+
 module.exports = {
     createDailyRoutines,
     getTodayDailyRoutines,
     provingDailyRoutine,
+    addReaction,
     upload
 };
