@@ -8,5 +8,9 @@ router.get('/', routineController.getRoutines);
 router.get('/dailyroutines', routineController.getDailyRoutines);
 // 루틴 생성
 router.post('/', routineController.createRoutine);
+// 루틴 수정
+router.post('/update/:routineId', routineController.updateRoutine);
+// 루틴 삭제
+router.delete('/:routineId', routineController.deleteRoutine);
 
 module.exports = router;

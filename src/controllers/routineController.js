@@ -94,8 +94,80 @@ const getDailyRoutines = async (req, res) => {
     }
 };
 
+// 일과를 수정하는 함수
+const updateRoutine = async (req, res) => {
+    try {
+        const { routineId } = req.params;
+        const { title, groupId, days, time } = req.body;
+
+        const routine = await Routine.findByPk(routineId);
+        if (!routine) {
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "Routine not found"
+            });
+        }
+
+        routine.title = title || routine.title;
+        routine.groupId = groupId || routine.groupId;
+        routine.days = days || routine.days;
+        routine.time = time || routine.time;
+
+        await routine.save();
+        console.log("Updated routine:", routine);
+
+        res.json({
+            status: true,
+            data: routine,
+            message: "Routine updated successfully"
+        });
+    } catch (error) {
+        console.error("Error in updateRoutine:", error);
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
+    }
+};
+
+// 일과를 삭제하는 함수
+const deleteRoutine = async (req, res) => {
+    try {
+        const { routineId } = req.params;
+
+        const routine = await Routine.findByPk(routineId);
+        if (!routine) {
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "Routine not found"
+            });
+        }
+
+        await routine.destroy();
+        console.log("Deleted routine:", routine);
+
+        res.json({
+            status: true,
+            data: routine,
+            message: "Routine deleted successfully"
+        });
+    } catch (error) {
+        console.error("Error in deleteRoutine:", error);
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     getRoutines,
     createRoutine,
-    getDailyRoutines
+    getDailyRoutines,
+    updateRoutine,
+    deleteRoutine
 };
