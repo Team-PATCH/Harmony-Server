@@ -6,8 +6,6 @@ const { Sequelize } = require("sequelize");
 
 // 제공된 질문을 가져오는 함수
 const getProvideQuestion = async (req, res) => {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  console.log(`Server's time zone: ${timeZone}`);
     try {
       const provideQuestion = await ProvideQuestion.findOne({
         order: [["pqid", "ASC"]],
