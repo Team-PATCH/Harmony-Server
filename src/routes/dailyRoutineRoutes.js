@@ -8,5 +8,7 @@ router.get('/today', dailyRoutineController.getTodayDailyRoutines);
 router.post('/proving/:dailyId', dailyRoutineController.upload.single('completedPhoto'), dailyRoutineController.provingDailyRoutine);
 // 리액션 추가
 router.post('/reaction/:dailyId', dailyRoutineController.addReaction);
+// 리액션 조회
+router.get('/reaction/:dailyId', dailyRoutineController.getReactions);
 
 module.exports = router;

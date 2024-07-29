@@ -166,12 +166,43 @@ const addReaction = async (req, res) => {
     }
 };
 
+// 리액션 조회
+const getReactions = async (req, res) => {
+    try {
+        const { dailyId } = req.params;
 
+        const reactions = await RoutineReaction.findAll({
+            where: { dailyId }
+        });
+
+        if (!reactions || reactions.length === 0) {
+            return res.status(404).json({
+                status: false,
+                data: [],
+                message: "No reactions found for this daily routine"
+            });
+        }
+
+        res.json({
+            status: true,
+            data: reactions,
+            message: "Reactions retrieved successfully"
+        });
+    } catch (error) {
+        console.error("Error in getReactions:", error);
+        res.status(500).json({
+            status: false,
+            data: [],
+            message: error.message
+        });
+    }
+};
 
 module.exports = {
     createDailyRoutines,
     getTodayDailyRoutines,
     provingDailyRoutine,
     addReaction,
+    getReactions,
     upload
 };
