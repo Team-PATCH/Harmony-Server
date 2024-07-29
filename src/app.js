@@ -55,7 +55,7 @@ cron.schedule('0 * * * *', async () => {
   }
 });
 
-// // 매일 오후 2시 56분에 데일리 일과 생성
+// // 매일 오후 2시 56분에 데일리 일과 생성 - 테스트용, 테스트 완료 이후 삭제
 // const cronExpression = '56 14 * * *';
 
 // console.log('Scheduled job will run daily at 14:56 KST');
