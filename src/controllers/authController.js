@@ -2,6 +2,7 @@
 const { User } = require('../models');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const moment = require('moment'); // moment 라이브러리를 추가해주세요
 
 exports.signup = async (req, res) => {
   try {
@@ -23,6 +24,9 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: '유효하지 않은 인증 제공자입니다.' });
     }
 
+    // socialTokenExpiredAt을 moment를 사용하여 파싱
+    const expiredAtDate = socialTokenExpiredAt ? moment(socialTokenExpiredAt, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
+
     let user = await User.findOne({ where: { userId } });
 
     if (user) {
@@ -31,7 +35,7 @@ exports.signup = async (req, res) => {
         profile,
         socialToken,
         refreshToken,
-        socialTokenExpiredAt,
+        socialTokenExpiredAt: expiredAtDate,
         lastLoginAt: new Date()
       });
     } else {
@@ -42,16 +46,21 @@ exports.signup = async (req, res) => {
         authProvider,
         socialToken,
         refreshToken,
-        socialTokenExpiredAt,
+        socialTokenExpiredAt: expiredAtDate,
         lastLoginAt: new Date()
       });
     }
 
     const token = jwt.sign({ userId: user.userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
+    // socialTokenExpiredAt을 원래 형식의 문자열로 변환하여 응답
+    const responseUser = user.toJSON();
+    responseUser.socialTokenExpiredAt = user.socialTokenExpiredAt ? 
+      moment(user.socialTokenExpiredAt).format("YYYY-MM-DD HH:mm:ss.SSS") : null;
+
     return res.status(user ? 200 : 201).json({
       message: user ? '사용자 정보가 업데이트되었습니다.' : '새 사용자가 생성되었습니다.',
-      user,
+      user: responseUser,
       token
     });
   } catch (error) {
