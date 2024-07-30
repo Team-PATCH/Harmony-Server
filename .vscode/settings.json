@@ -1,0 +1,5 @@
+{
+    "appService.showBuildDuringDeployPrompt": false,
+    "appService.defaultWebAppToDeploy": "/subscriptions/29d1a7e9-48bb-4662-8754-763bae7e38b5/resourceGroups/rg-patch/providers/Microsoft.Web/sites/harmony-api",
+    "appService.deploySubpath": "."
+}
