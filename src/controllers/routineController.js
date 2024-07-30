@@ -47,6 +47,22 @@ const createRoutine = async (req, res) => {
         const newRoutine = await Routine.create({ groupId, title, days, time });
         console.log("Created routine:", newRoutine);
 
+        // 현재 날짜와 요일을 가져옴
+        const today = dayjs().tz("Asia/Seoul");
+        const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+
+        // 새로운 루틴이 오늘 요일에 해당하는 경우 DailyRoutine 생성
+        if ((days & (1 << (6 - weekday))) !== 0) {
+            const newDailyRoutine = await DailyRoutine.create({
+                routineId: newRoutine.routineId,
+                groupId: newRoutine.groupId,
+                time: today.toDate(),
+                completedPhoto: null,
+                completedTime: null
+            });
+            console.log("Created daily routine:", newDailyRoutine);
+        }
+
         res.status(201).json({
             status: true,
             data: newRoutine,
