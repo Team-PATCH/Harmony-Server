@@ -27,7 +27,7 @@ class UserGroup extends Sequelize.Model {
           allowNull: true,
         },
         deviceToken: {
-          type: Sequelize.STRING(30),
+          type: Sequelize.STRING(200), //이부분 길이수정때문에 바꿨습니다.
           allowNull: true,
         },
       },

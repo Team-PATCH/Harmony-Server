@@ -1,9 +1,9 @@
-const { sequelize } = require('../src/models');
-const Question = require('../src/models/question');
-const ProvideQuestion = require('../src/models/provideQuestion');
-const Comment = require('../src/models/comment');
-const Group = require('../src/models/group');
-const User = require('../src/models/user');
+const { sequelize } = require("../src/models");
+const Question = require("../src/models/question");
+const ProvideQuestion = require("../src/models/provideQuestion");
+const Comment = require("../src/models/comment");
+const Group = require("../src/models/group");
+const User = require("../src/models/user");
 
 async function questionDummy() {
   try {
@@ -15,14 +15,26 @@ async function questionDummy() {
       { question: "내일 꼭 하고 싶은 일은?" },
       { question: "최근에 본 영화 중 가장 좋았던 것은?" },
       { question: "어렸을 때 가장 좋아했던 장난감은?" },
-      { question: "지금 가장 하고 싶은 여행지는 어디인가요?" }
+      { question: "지금 가장 하고 싶은 여행지는 어디인가요?" },
+      { question: "가장 최근에 도전해본 새로운 일은 무엇인가요?" },
+      { question: "어린 시절 꿈꿨던 직업은 무엇이었나요?" },
+      { question: "지금까지 읽은 책 중 가장 감명 깊었던 책은?" },
+      { question: "가장 기억에 남는 생일 선물은 무엇인가요?" },
+      { question: "올해 이루고 싶은 가장 큰 목표는 무엇인가요?" },
+      { question: "가장 좋아하는 계절은 언제이고 그 이유는?" },
+      { question: "지금까지 만난 사람 중 가장 존경하는 사람은 누구인가요?" },
+      { question: "가장 기억에 남는 콘서트나 공연은 무엇인가요?" },
+      { question: "어떤 순간에 가장 자신감을 느끼나요?" },
+      { question: "가장 좋아하는 요리는 무엇이고, 왜 좋아하나요?" },
+      { question: "지금까지 한 선택 중 가장 잘한 선택은 무엇이라고 생각하나요?"},
+      { question: "10년 후의 자신에게 하고 싶은 말은?" },
     ];
 
     for (const pq of provideQuestions) {
       await ProvideQuestion.create(pq);
     }
 
-    console.log('ProvideQuestions created successfully.');
+    console.log("ProvideQuestions created successfully.");
 
     // 기존 Group과 User 데이터 가져오기
     const group = await Group.findOne();
@@ -35,29 +47,29 @@ async function questionDummy() {
         question: "오늘 가장 기억에 남는 일은 무엇인가요?",
         answer: "손자와 함께 공원에서 산책한 것입니다.",
         askedAt: new Date(Date.now() - 86400000), // 어제
-        answeredAt: new Date(Date.now() - 82800000) // 어제 + 1시간
+        answeredAt: new Date(Date.now() - 82800000), // 어제 + 1시간
       },
       {
         groupId: group.groupId,
         question: "내일 하고 싶은 일이 있나요?",
         answer: null,
         askedAt: new Date(),
-        answeredAt: null
+        answeredAt: null,
       },
       {
         groupId: group.groupId,
         question: "요즘 가장 즐겁게 보고 있는 TV 프로그램은 무엇인가요?",
         answer: "요즘 '윤식당'을 재미있게 보고 있어요.",
         askedAt: new Date(Date.now() - 172800000), // 2일 전
-        answeredAt: new Date(Date.now() - 169200000) // 2일 전 + 1시간
-      }
+        answeredAt: new Date(Date.now() - 169200000), // 2일 전 + 1시간
+      },
     ];
 
     for (const q of questions) {
       await Question.create(q);
     }
 
-    console.log('Questions created successfully.');
+    console.log("Questions created successfully.");
 
     // 생성된 Question 가져오기
     const createdQuestions = await Question.findAll();
@@ -68,43 +80,45 @@ async function questionDummy() {
         questionId: createdQuestions[0].questionId,
         groupId: group.groupId,
         authorId: users[0].userId,
-        content: "정말 좋은 시간 보내셨겠어요!"
+        content: "정말 좋은 시간 보내셨겠어요!",
       },
       {
         questionId: createdQuestions[0].questionId,
         groupId: group.groupId,
         authorId: users[1].userId,
-        content: "다음에는 저도 함께 가고 싶어요."
+        content: "다음에는 저도 함께 가고 싶어요.",
       },
       {
         questionId: createdQuestions[1].questionId,
         groupId: group.groupId,
         authorId: users[0].userId,
-        content: "무엇을 하고 싶으세요?"
-      }
+        content: "무엇을 하고 싶으세요?",
+      },
     ];
 
     for (const comment of comments) {
       await Comment.create(comment);
     }
 
-    console.log('Comments created successfully.');
+    console.log("Comments created successfully.");
 
     // 생성된 데이터 확인
     const allProvideQuestions = await ProvideQuestion.findAll();
     const allQuestions = await Question.findAll({
-      include: [Group, Comment]
+      include: [Group, Comment],
     });
     const allComments = await Comment.findAll({
-      include: [Question]
+      include: [Question],
     });
 
-    console.log('All ProvideQuestions:', JSON.stringify(allProvideQuestions, null, 2));
-    console.log('All Questions:', JSON.stringify(allQuestions, null, 2));
-    console.log('All Comments:', JSON.stringify(allComments, null, 2));
-
+    console.log(
+      "All ProvideQuestions:",
+      JSON.stringify(allProvideQuestions, null, 2)
+    );
+    console.log("All Questions:", JSON.stringify(allQuestions, null, 2));
+    console.log("All Comments:", JSON.stringify(allComments, null, 2));
   } catch (error) {
-    console.error('Error creating dummy data:', error);
+    console.error("Error creating dummy data:", error);
   } finally {
     await sequelize.close();
   }

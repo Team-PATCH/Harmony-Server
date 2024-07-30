@@ -1,6 +1,10 @@
 // controllers/mcController.js
-const APNsController = require('../utils/apn');
-const apns = new APNsController();
+
+// const APNsController = require('../utils/apn');
+// const apns = new APNsController();
+
+//윗 두줄을 밑에 한줄로 바꿔쓰시면 됩니다:
+const apnsController = require('../utils/apn');
 
 const getMemoryCards = (req, res) => {
     // 더미 데이터 생성

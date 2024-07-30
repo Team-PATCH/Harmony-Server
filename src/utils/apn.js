@@ -39,4 +39,5 @@ class APNsController {
   }
 }
 
-module.exports = APNsController;
+// 클래스의 인스턴스를 생성하여 내보냅니다.
+module.exports = new APNsController();

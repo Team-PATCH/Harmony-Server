@@ -11,11 +11,13 @@ const db = require('./models');
 const mcRouter = require('./routes/mcRoutes');
 const questionRouter = require('./routes/questionRoutes');
 
+const { setupCronJobs } = require('./controllers/questionController');
+const apnsController = require('./utils/apn');
+
 const app = express();
 const port = process.env.PORT;
 
 console.log('PORT:', process.env.PORT);
-
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -26,8 +28,17 @@ app.use('/qc', questionRouter);
 
 app.get('/', (req, res) => {
   res.send('엔드포인트임 이게 나온다면 뭔가 문제가 있다')
-})
+});
+
+// cron 작업 설정
+setupCronJobs();
+
+process.on('SIGINT', () => {
+  console.log('서버를 종료합니다...');
+  apnsController.shutdown();
+  process.exit();
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
-})
+});
