@@ -18,11 +18,7 @@ class Routine extends Sequelize.Model {
           type: Sequelize.STRING(20),
           allowNull: false,
         },
-        photo: {
-          type: Sequelize.STRING(200),
-          allowNull: false,
-        },
-        day: {
+        days: {
           type: Sequelize.INTEGER,
           allowNull: false,
         },
