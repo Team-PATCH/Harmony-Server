@@ -13,21 +13,28 @@ dotenv.config();
 
 const db = require('./models');
 
+const authMiddleware = require('./middleware/auth');
+const userRouter = require('./routes/userRoutes');
 const mcRouter = require('./routes/mcRoutes');
 const questionRouter = require('./routes/questionRoutes');
 const routineRouter = require('./routes/routineRoutes');
 const dailyRoutineRouter = require('./routes/dailyRoutineRoutes');
+
+const { setupCronJobs } = require('./controllers/questionController');
+const apnsController = require('./utils/apn');
 
 const app = express();
 const port = process.env.PORT;
 
 console.log('PORT:', process.env.PORT);
 
-
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads')); // uploads 폴더를 정적 파일로 제공
+app.use('/user', userRouter);
+
+app.use(authMiddleware.verifyToken);
 
 app.use('/mc', mcRouter);
 app.use('/qc', questionRouter);
@@ -36,11 +43,20 @@ app.use('/dailyroutine', dailyRoutineRouter)
 
 app.get('/', (req, res) => {
   res.send('엔드포인트임 이게 나온다면 뭔가 문제가 있다')
-})
+});
+
+// cron 작업 설정
+setupCronJobs();
+
+process.on('SIGINT', () => {
+  console.log('서버를 종료합니다...');
+  apnsController.shutdown();
+  process.exit();
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
-})
+});
 
 // 플러그인 사용 설정
 dayjs.extend(utc);
@@ -54,15 +70,3 @@ cron.schedule('0 * * * *', async () => {
     await createDailyRoutines();
   }
 });
-
-// // 매일 오후 5시 13분에 데일리 일과 생성 - 테스트용, 테스트 완료 이후 삭제
-// const cronExpression = '18 17 * * *';
-
-// console.log('Scheduled job will run daily at 17:18 KST');
-
-// // 특정 시간에 데일리 일과 생성
-// cron.schedule(cronExpression, async () => {
-//   console.log('Running daily routine creation job at 17:18 KST');
-//   await createDailyRoutines();
-// });
-
