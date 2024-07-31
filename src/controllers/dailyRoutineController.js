@@ -7,20 +7,16 @@ const timezone = require("dayjs/plugin/timezone");
 const { Op } = require("sequelize");
 const upload = require("../utils/uploadImage");
 
-// 플러그인 사용 설정
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// 오늘 날짜의 데일리 일과 조회
+const AZURE_BLOB_BASE_URL = "https://saharmony.blob.core.windows.net/daily-routine-proving/";
+
 // 오늘 날짜의 데일리 일과 조회
 const getTodayDailyRoutines = async (req, res) => {
     try {
-        // const now = dayjs().tz("Asia/Seoul");
         const today = dayjs().tz("Asia/Seoul").startOf('day').toDate();
         const tomorrow = dayjs().tz("Asia/Seoul").add(1, 'day').startOf('day').toDate();
-
-        console.log(`Today's Start: ${today}`);
-        console.log(`Tomorrow's Start: ${tomorrow}`);
 
         const dailyRoutines = await DailyRoutine.findAll({
             where: {
@@ -63,23 +59,19 @@ const getTodayDailyRoutines = async (req, res) => {
     }
 };
 
-
 // 오늘의 요일에 해당하는 데일리 일과 생성 함수
 const createDailyRoutines = async () => {
     try {
-        console.log("Let's create Daily Routines")
         const today = dayjs().tz("Asia/Seoul");
-        const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+        const weekday = (today.day() + 6) % 7;
 
-        // 오늘 날짜의 요일에 해당하는 루틴 조회
         const routines = await Routine.findAll({
             where: {
                 deletedAt: null
             }
         });
-        console.log("routines:" + routines)
+
         const todayRoutines = routines.filter(routine => (routine.days & (1 << (6 - weekday))) !== 0);
-        console.log("today's routines:" + todayRoutines)
 
         for (const routine of todayRoutines) {
             await DailyRoutine.create({
@@ -90,8 +82,6 @@ const createDailyRoutines = async () => {
                 completedTime: null
             });
         }
-
-        console.log("Daily routines for today created successfully.");
     } catch (error) {
         console.error("Error in createDailyRoutines:", error);
     }
@@ -110,7 +100,7 @@ const provingDailyRoutine = async (req, res) => {
             });
         }
 
-        const completedPhoto = req.filename ? req.filename : null;
+        const completedPhoto = req.filename ? `${AZURE_BLOB_BASE_URL}${req.filename}` : null;
         dailyRoutine.completedPhoto = completedPhoto;
         dailyRoutine.completedTime = dayjs().tz("Asia/Seoul").toDate();
 
