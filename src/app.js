@@ -8,8 +8,7 @@ const cron = require('node-cron');
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
-
-const { createDailyRoutines } = require('./controllers/routineController');
+const { createDailyRoutines } = require('./controllers/dailyRoutineController');
 dotenv.config();
 
 const db = require('./models');
@@ -71,5 +70,3 @@ cron.schedule('0 * * * *', async () => {
     await createDailyRoutines();
   }
 });
-
-
