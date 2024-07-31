@@ -6,11 +6,11 @@ const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const { Op } = require("sequelize");
 const upload = require("../utils/uploadImage");
+const dotenv = require('dotenv');
+dotenv.config();
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-const AZURE_BLOB_BASE_URL = "https://saharmony.blob.core.windows.net/daily-routine-proving/";
 
 // 오늘 날짜의 데일리 일과 조회
 const getTodayDailyRoutines = async (req, res) => {
@@ -100,7 +100,7 @@ const provingDailyRoutine = async (req, res) => {
             });
         }
 
-        const completedPhoto = req.filename ? `${AZURE_BLOB_BASE_URL}${req.filename}` : null;
+        const completedPhoto = req.filename ? `${process.env.AZURE_BLOB_BASE_URL}${req.filename}` : null;
         dailyRoutine.completedPhoto = completedPhoto;
         dailyRoutine.completedTime = dayjs().tz("Asia/Seoul").toDate();
 
