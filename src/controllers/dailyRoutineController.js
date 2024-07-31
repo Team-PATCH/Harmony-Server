@@ -37,7 +37,15 @@ const getTodayDailyRoutines = async (req, res) => {
                     [Op.lt]: tomorrow
                 }
             },
-            include: [Routine]
+            include: [
+                {
+                    model: Routine,
+                    where: {
+                        deletedAt: null
+                    },
+                    required: true
+                }
+            ]
         });
 
         if (!dailyRoutines || dailyRoutines.length === 0) {
@@ -71,7 +79,11 @@ const createDailyRoutines = async () => {
         const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
 
         // 오늘 날짜의 요일에 해당하는 루틴 조회
-        const routines = await Routine.findAll();
+        const routines = await Routine.findAll({
+            where: {
+                deletedAt: null
+            }
+        });
         console.log("routines:" + routines)
         const todayRoutines = routines.filter(routine => (routine.days & (1 << (6 - weekday))) !== 0);
         console.log("today's routines:" + todayRoutines)
