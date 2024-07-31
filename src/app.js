@@ -16,6 +16,7 @@ const db = require('./models');
 
 const authMiddleware = require('./middleware/auth');
 const userRouter = require('./routes/userRoutes');
+const groupRouter = require('./routes/groupRoutes')
 const mcRouter = require('./routes/mcRoutes');
 const questionRouter = require('./routes/questionRoutes');
 const routineRouter = require('./routes/routineRoutes');
@@ -35,6 +36,7 @@ app.use('/user', userRouter);
 
 app.use(authMiddleware.verifyToken);
 
+app.use('/group', groupRouter);
 app.use('/mc', mcRouter);
 app.use('/qc', questionRouter);
 app.use('/routine', routineRouter)
