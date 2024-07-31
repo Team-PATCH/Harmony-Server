@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads')); // uploads 폴더를 정적 파일로 제공
 app.use('/user', userRouter);
 
-app.use(authMiddleware.verifyToken);
+// app.use(authMiddleware.verifyToken);
 
 app.use('/mc', mcRouter);
 app.use('/qc', questionRouter);
