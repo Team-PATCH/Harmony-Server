@@ -1,24 +1,18 @@
 const cron = require("node-cron");
 const moment = require("moment");
-
 const { Op } = require("sequelize");
-
 const ProvideQuestion = require("../models/provideQuestion");
 const Question = require("../models/question");
 const Comment = require("../models/comment");
-
 const UserGroup = require("../models/userGroup");
 const Group = require("../models/group");
-
 const {
   notifyNewQuestion,
   notifyNewAnswer,
   notifyAnswerUpdate,
   notifyNewComment
 } = require("./notificationController");
-
 const apnsController = require("../utils/apn");
-
 const { Sequelize } = require("sequelize");
 
 // createDailyQuestion: 매일 새 질문 생성 및 VIP에게 알림 발송 (cron job에서 호출)
@@ -37,14 +31,13 @@ async function createDailyQuestion() {
           createdAt: new Date(),
         });
 
-        // VIP 사용자에게 푸시 알림 발송
         await notifyNewQuestion(createdQuestion);
       }
 
       await newQuestion.destroy();
     }
   } catch (error) {
-    console.error("Error in createDailyQuestion:", error);
+    console.error("createDailyQuestion 오류:", error);
   }
 }
 
@@ -54,35 +47,43 @@ async function postAnswer(req, res) {
     const question = await Question.findByPk(req.params.questionId);
 
     if (!question) {
-      return res.status(404).json({ message: "Question not found" });
+      return res.status(404).json({ 
+        status: "error",
+        message: "질문을 찾을 수 없습니다" 
+      });
     }
 
-    // 이미 답변이 있는 경우 거부
     if (question.answer) {
-      return res
-        .status(400)
-        .json({ message: "This question has already been answered" });
+      return res.status(400).json({ 
+        status: "error",
+        message: "이 질문에는 이미 답변이 있습니다" 
+      });
     }
 
     question.answer = req.body.answer;
     question.answeredAt = new Date();
     await question.save();
 
-    console.log("Answer saved. Attempting to send notifications.");
+    console.log("답변이 저장되었습니다. 알림을 보내는 중...");
 
-    // 일반 멤버에게 알림 발송
     try {
       const notificationResult = await notifyNewAnswer(question);
-      console.log("Notification result:", notificationResult);
+      console.log("알림 결과:", notificationResult);
     } catch (notificationError) {
-      console.error("Failed to send notifications:", notificationError);
-      // 알림 실패를 로그로 남기지만, 전체 프로세스는 계속 진행
+      console.error("알림 전송 실패:", notificationError);
     }
 
-    res.json(question);
+    res.status(200).json({
+      status: "success",
+      message: "답변이 성공적으로 저장되었습니다",
+      data: question
+    });
   } catch (error) {
-    console.error("Error in postAnswer:", error);
-    res.status(500).json({ message: error.message });
+    console.error("postAnswer 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 }
 
@@ -93,34 +94,45 @@ const updateAnswer = async (req, res) => {
     const { answer } = req.body;
 
     if (!answer) {
-      return res.status(400).json({ message: "Answer is required" });
+      return res.status(400).json({ 
+        status: "error",
+        message: "답변 내용이 필요합니다" 
+      });
     }
 
     const question = await Question.findByPk(questionId);
 
     if (!question) {
-      return res.status(404).json({ message: "Question not found" });
+      return res.status(404).json({ 
+        status: "error",
+        message: "질문을 찾을 수 없습니다" 
+      });
     }
 
     question.answer = answer;
-    question.answeredAt = new Date(); // 답변 시간 업데이트
+    question.answeredAt = new Date();
     await question.save();
 
-    console.log("Answer updated. Attempting to send notifications.");
+    console.log("답변이 업데이트되었습니다. 알림을 보내는 중...");
 
-    // 일반 멤버에게 알림 발송
     try {
       const notificationResult = await notifyAnswerUpdate(question);
-      console.log("Notification result:", notificationResult);
+      console.log("알림 결과:", notificationResult);
     } catch (notificationError) {
-      console.error("Failed to send notifications:", notificationError);
-      // 알림 실패를 로그로 남기지만, 전체 프로세스는 계속 진행
+      console.error("알림 전송 실패:", notificationError);
     }
 
-    res.json(question);
+    res.status(200).json({
+      status: "success",
+      message: "답변이 성공적으로 업데이트되었습니다",
+      data: question
+    });
   } catch (error) {
-    console.error("Error in updateAnswer:", error);
-    res.status(500).json({ message: error.message });
+    console.error("updateAnswer 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
@@ -129,7 +141,10 @@ async function postComment(req, res) {
   try {
     const { questionId, groupId, authorId, content } = req.body;
     if (!questionId || !groupId || !authorId || !content) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(400).json({ 
+        status: "error",
+        message: "필수 필드가 누락되었습니다" 
+      });
     }
 
     const comment = await Comment.create({
@@ -141,21 +156,26 @@ async function postComment(req, res) {
 
     const question = await Question.findByPk(questionId);
 
-    console.log("Comment created. Attempting to send notifications.");
+    console.log("댓글이 생성되었습니다. 알림을 보내는 중...");
 
-    // 그룹의 모든 멤버에게 알림 발송
     try {
       const notificationResult = await notifyNewComment(comment, question);
-      console.log("Notification result:", notificationResult);
+      console.log("알림 결과:", notificationResult);
     } catch (notificationError) {
-      console.error("Failed to send notifications:", notificationError);
-      // 알림 실패를 로그로 남기지만, 전체 프로세스는 계속 진행
+      console.error("알림 전송 실패:", notificationError);
     }
 
-    res.status(201).json(comment);
+    res.status(201).json({
+      status: "success",
+      message: "댓글이 성공적으로 생성되었습니다",
+      data: comment
+    });
   } catch (error) {
-    console.error("Error in postComment:", error);
-    res.status(500).json({ message: error.message });
+    console.error("postComment 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 }
 
@@ -165,23 +185,29 @@ async function updateComment(req, res) {
     const { commentId } = req.params;
     const { content } = req.body;
     
-    // Find the comment
     const comment = await Comment.findByPk(commentId);
     
     if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
+      return res.status(404).json({ 
+        status: "error",
+        message: "댓글을 찾을 수 없습니다" 
+      });
     }
     
-    // Update the comment
     comment.content = content;
     await comment.save();
     
-    // Optionally, send notifications about the updated comment
-    
-    res.json(comment);
+    res.status(200).json({
+      status: "success",
+      message: "댓글이 성공적으로 업데이트되었습니다",
+      data: comment
+    });
   } catch (error) {
-    console.error("Error in updateComment:", error);
-    res.status(500).json({ message: error.message });
+    console.error("updateComment 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 }
 
@@ -191,15 +217,25 @@ const getProvideQuestion = async (req, res) => {
     const provideQuestion = await ProvideQuestion.findOne({
       order: [["pqid", "ASC"]],
     });
-    console.log("Retrieved question:", provideQuestion);
+    console.log("검색된 질문:", provideQuestion);
     if (!provideQuestion) {
-      console.log("No questions found in the database");
-      return res.status(404).json({ message: "No questions found" });
+      console.log("데이터베이스에서 질문을 찾을 수 없습니다");
+      return res.status(404).json({ 
+        status: "error",
+        message: "질문을 찾을 수 없습니다" 
+      });
     }
-    res.json(provideQuestion);
+    res.status(200).json({
+      status: "success",
+      message: "질문이 성공적으로 검색되었습니다",
+      data: provideQuestion
+    });
   } catch (error) {
-    console.error("Error in getProvideQuestion:", error);
-    res.status(500).json({ message: error.message });
+    console.error("getProvideQuestion 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
@@ -209,7 +245,6 @@ const getCurrentQuestion = async (req, res) => {
     const groupId = req.params.groupId;
     const today = moment().startOf("day");
 
-    // 오늘 생성된 가장 최근 질문 찾기
     let question = await Question.findOne({
       where: {
         groupId: groupId,
@@ -221,7 +256,6 @@ const getCurrentQuestion = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    // 오늘 생성된 질문이 없으면 새 질문 생성
     if (!question) {
       const provideQuestion = await ProvideQuestion.findOne({
         order: [["pqid", "ASC"]],
@@ -238,16 +272,26 @@ const getCurrentQuestion = async (req, res) => {
       }
     }
 
-    console.log("Current question:", question);
+    console.log("현재 질문:", question);
 
     if (question) {
-      res.json(question);
+      res.status(200).json({
+        status: "success",
+        message: "현재 질문이 성공적으로 검색되었습니다",
+        data: question
+      });
     } else {
-      res.status(404).json({ message: "No question available" });
+      res.status(404).json({ 
+        status: "error",
+        message: "사용 가능한 질문이 없습니다" 
+      });
     }
   } catch (error) {
-    console.error("Error in getCurrentQuestion:", error);
-    res.status(500).json({ message: error.message });
+    console.error("getCurrentQuestion 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
@@ -259,9 +303,16 @@ const getQuestions = async (req, res) => {
       order: [["questionId", "DESC"]],
       limit: 3,
     });
-    res.json(questions);
+    res.status(200).json({
+      status: "success",
+      message: "최근 질문 3개가 성공적으로 검색되었습니다",
+      data: questions
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
@@ -272,9 +323,16 @@ const getAllQuestions = async (req, res) => {
       where: { groupId: req.params.groupId },
       order: [["questionId", "DESC"]],
     });
-    res.json(questions);
+    res.status(200).json({
+      status: "success",
+      message: "모든 질문이 성공적으로 검색되었습니다",
+      data: questions
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
@@ -282,9 +340,23 @@ const getAllQuestions = async (req, res) => {
 const getQuestionDetail = async (req, res) => {
   try {
     const question = await Question.findByPk(req.params.questionId);
-    res.json(question);
+    if (question) {
+      res.status(200).json({
+        status: "success",
+        message: "질문 상세 정보가 성공적으로 검색되었습니다",
+        data: question
+      });
+    } else {
+      res.status(404).json({
+        status: "error",
+        message: "질문을 찾을 수 없습니다"
+      });
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
@@ -295,38 +367,18 @@ const getComments = async (req, res) => {
       where: { questionId: req.params.questionId },
       order: [["createdAt", "DESC"]],
     });
-    res.json(comments);
+    res.status(200).json({
+      status: "success",
+      message: "댓글이 성공적으로 검색되었습니다",
+      data: comments
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
-
-// // updateAnswer: 답변 수정 함수
-// const updateAnswer = async (req, res) => {
-//   try {
-//     const questionId = req.params.questionId;
-//     const { answer } = req.body;
-
-//     if (!answer) {
-//       return res.status(400).json({ message: "Answer is required" });
-//     }
-
-//     const question = await Question.findByPk(questionId);
-
-//     if (!question) {
-//       return res.status(404).json({ message: "Question not found" });
-//     }
-
-//     question.answer = answer;
-//     question.answeredAt = new Date(); // 답변 시간 업데이트
-//     await question.save();
-
-//     res.json(question);
-//   } catch (error) {
-//     console.error("Error in updateAnswer:", error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 
 // getNextQuestion: 다음 질문을 가져오는 함수
 const getNextQuestion = async (req, res) => {
@@ -334,19 +386,23 @@ const getNextQuestion = async (req, res) => {
     const groupId = req.params.groupId;
     const currentQuestionId = req.params.currentQuestionId;
 
-    // 현재 질문 찾기
     const currentQuestion = await Question.findByPk(currentQuestionId);
 
     if (!currentQuestion) {
-      return res.status(404).json({ message: "Current question not found" });
+      return res.status(404).json({ 
+        status: "error",
+        message: "현재 질문을 찾을 수 없습니다" 
+      });
     }
 
-    // 현재 질문에 답변이 없으면 같은 질문 반환
     if (!currentQuestion.answer) {
-      return res.json(currentQuestion);
+      return res.status(200).json({
+        status: "success",
+        message: "현재 질문이 아직 답변되지 않았습니다",
+        data: currentQuestion
+      });
     }
 
-    // 답변되지 않은 다음 질문 찾기
     let nextQuestion = await Question.findOne({
       where: {
         groupId: groupId,
@@ -356,7 +412,6 @@ const getNextQuestion = async (req, res) => {
       order: [["pqid", "ASC"]],
     });
 
-    // 답변되지 않은 질문이 없으면 새 질문 생성
     if (!nextQuestion) {
       const provideQuestion = await ProvideQuestion.findOne({
         order: [["pqid", "ASC"]],
@@ -374,13 +429,23 @@ const getNextQuestion = async (req, res) => {
     }
 
     if (nextQuestion) {
-      res.json(nextQuestion);
+      res.status(200).json({
+        status: "success",
+        message: "다음 질문이 성공적으로 검색되었습니다",
+        data: nextQuestion
+      });
     } else {
-      res.status(404).json({ message: "No more questions available" });
+      res.status(404).json({
+        status: "error",
+        message: "더 이상 사용 가능한 질문이 없습니다"
+      });
     }
   } catch (error) {
-    console.error("Error in getNextQuestion:", error);
-    res.status(500).json({ message: error.message });
+    console.error("getNextQuestion 오류:", error);
+    res.status(500).json({ 
+      status: "error",
+      message: "서버 오류가 발생했습니다" 
+    });
   }
 };
 
