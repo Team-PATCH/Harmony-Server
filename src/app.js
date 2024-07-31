@@ -21,11 +21,13 @@ const questionRouter = require('./routes/questionRoutes');
 const routineRouter = require('./routes/routineRoutes');
 const dailyRoutineRouter = require('./routes/dailyRoutineRoutes');
 
+const { setupCronJobs } = require('./controllers/questionController');
+const apnsController = require('./utils/apn');
+
 const app = express();
 const port = process.env.PORT;
 
 console.log('PORT:', process.env.PORT);
-
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -42,11 +44,20 @@ app.use('/dailyroutine', dailyRoutineRouter)
 
 app.get('/', (req, res) => {
   res.send('엔드포인트임 이게 나온다면 뭔가 문제가 있다')
-})
+});
+
+// cron 작업 설정
+setupCronJobs();
+
+process.on('SIGINT', () => {
+  console.log('서버를 종료합니다...');
+  apnsController.shutdown();
+  process.exit();
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
-})
+});
 
 // 플러그인 사용 설정
 dayjs.extend(utc);
@@ -61,14 +72,4 @@ cron.schedule('0 * * * *', async () => {
   }
 });
 
-// // 매일 오후 2시 56분에 데일리 일과 생성 - 테스트용, 테스트 완료 이후 삭제
-// const cronExpression = '56 14 * * *';
-
-// console.log('Scheduled job will run daily at 14:56 KST');
-
-// // 특정 시간에 데일리 일과 생성
-// cron.schedule(cronExpression, async () => {
-//   console.log('Running daily routine creation job at 14:56 KST');
-//   await createDailyRoutines();
-// });
 
