@@ -1,34 +1,26 @@
 const Routine = require("../models/routine");
 const DailyRoutine = require("../models/dailyRoutine");
-const RoutineReaction = require("../models/routionReaction")
+const RoutineReaction = require("../models/routionReaction");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const { Op } = require("sequelize");
-const multer = require("multer");
-const path = require("path");
+const upload = require("../utils/uploadImage");
 
 // 플러그인 사용 설정
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// multer 설정
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // 파일 저장 경로
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
-
-const upload = multer({ storage });
-
+// 오늘 날짜의 데일리 일과 조회
 // 오늘 날짜의 데일리 일과 조회
 const getTodayDailyRoutines = async (req, res) => {
     try {
+        // const now = dayjs().tz("Asia/Seoul");
         const today = dayjs().tz("Asia/Seoul").startOf('day').toDate();
         const tomorrow = dayjs().tz("Asia/Seoul").add(1, 'day').startOf('day').toDate();
+
+        console.log(`Today's Start: ${today}`);
+        console.log(`Tomorrow's Start: ${tomorrow}`);
 
         const dailyRoutines = await DailyRoutine.findAll({
             where: {
@@ -70,6 +62,7 @@ const getTodayDailyRoutines = async (req, res) => {
         });
     }
 };
+
 
 // 오늘의 요일에 해당하는 데일리 일과 생성 함수
 const createDailyRoutines = async () => {
@@ -117,7 +110,7 @@ const provingDailyRoutine = async (req, res) => {
             });
         }
 
-        const completedPhoto = req.file ? req.file.path : null;
+        const completedPhoto = req.filename ? req.filename : null;
         dailyRoutine.completedPhoto = completedPhoto;
         dailyRoutine.completedTime = dayjs().tz("Asia/Seoul").toDate();
 
