@@ -20,7 +20,7 @@ class Group extends Sequelize.Model {
         },
         vipInviteUrl: {
           type: Sequelize.STRING(200),
-          allowNull: false,
+          allowNull: true,
         },
         vipId: {
           type: Sequelize.STRING(50),

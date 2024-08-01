@@ -8,14 +8,14 @@ const cron = require('node-cron');
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
-
-const { createDailyRoutines } = require('./controllers/routineController');
+const { createDailyRoutines } = require('./controllers/dailyRoutineController');
 dotenv.config();
 
 const db = require('./models');
 
 const authMiddleware = require('./middleware/auth');
 const userRouter = require('./routes/userRoutes');
+const groupRouter = require('./routes/groupRoutes')
 const mcRouter = require('./routes/mcRoutes');
 const questionRouter = require('./routes/questionRoutes');
 const routineRouter = require('./routes/routineRoutes');
@@ -37,6 +37,7 @@ app.use('/user', userRouter);
 
 // app.use(authMiddleware.verifyToken);
 
+app.use('/group', groupRouter);
 app.use('/mc', mcRouter);
 app.use('/qc', questionRouter);
 app.use('/routine', routineRouter)
@@ -71,5 +72,3 @@ cron.schedule('0 * * * *', async () => {
     await createDailyRoutines();
   }
 });
-
-

@@ -1,5 +1,5 @@
 const Routine = require("../models/routine");
-const DailyRoutine = require("../models/dailyRoutine")
+const DailyRoutine = require("../models/dailyRoutine");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -43,9 +43,36 @@ const getRoutines = async (req, res) => {
 // 일과를 생성하는 함수
 const createRoutine = async (req, res) => {
     try {
-        const { groupId, title, days, time } = req.body;
-        const newRoutine = await Routine.create({ groupId, title, days, time });
+        const { routineId, groupId, title, days, time } = req.body;
+
+        // 이미 존재하는 routineId 체크
+        const existingRoutine = await Routine.findByPk(routineId);
+        if (existingRoutine) {
+            return res.status(400).json({
+                status: false,
+                data: [],
+                message: "Routine ID already exists"
+            });
+        }
+
+        const newRoutine = await Routine.create({ routineId, groupId, title, days, time });
         console.log("Created routine:", newRoutine);
+
+        // 현재 날짜와 요일을 가져옴
+        const today = dayjs().tz("Asia/Seoul");
+        const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+
+        // 새로운 루틴이 오늘 요일에 해당하는 경우 DailyRoutine 생성
+        if ((days & (1 << (6 - weekday))) !== 0) {
+            const newDailyRoutine = await DailyRoutine.create({
+                routineId: newRoutine.routineId,
+                groupId: newRoutine.groupId,
+                time: today.toDate(),
+                completedPhoto: null,
+                completedTime: null
+            });
+            console.log("Created daily routine:", newDailyRoutine);
+        }
 
         res.status(201).json({
             status: true,
@@ -85,6 +112,23 @@ const updateRoutine = async (req, res) => {
         await routine.save();
         console.log("Updated routine:", routine);
 
+        // 현재 날짜와 요일을 가져옴
+        const today = dayjs().tz("Asia/Seoul");
+        const weekday = (today.day() + 6) % 7; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+
+        // 기존 데일리 루틴 삭제 후, 새로운 설정에 맞는 데일리 루틴 생성
+        if ((days & (1 << (6 - weekday))) !== 0) {
+            await DailyRoutine.destroy({ where: { routineId, time: { [Op.gte]: today.startOf('day').toDate(), [Op.lt]: today.endOf('day').toDate() } } });
+            const newDailyRoutine = await DailyRoutine.create({
+                routineId: routine.routineId,
+                groupId: routine.groupId,
+                time: today.toDate(),
+                completedPhoto: null,
+                completedTime: null
+            });
+            console.log("Updated daily routine:", newDailyRoutine);
+        }
+
         res.json({
             status: true,
             data: routine,
@@ -116,6 +160,10 @@ const deleteRoutine = async (req, res) => {
 
         await routine.destroy();
         console.log("Deleted routine:", routine);
+
+        // 해당 루틴과 관련된 데일리 루틴도 삭제
+        await DailyRoutine.destroy({ where: { routineId } });
+        console.log("Deleted related daily routines");
 
         res.json({
             status: true,
