@@ -11,7 +11,7 @@ class ChatMessage extends Sequelize.Model {
           autoIncrement: true, // 자동 증가 설정
         },
         chatId: {
-          type: Sequelize.STRING(100),
+          type: Sequelize.UUID,
           allowNull: false,
         },
         mcId: {

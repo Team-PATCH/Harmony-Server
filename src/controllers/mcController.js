@@ -2,6 +2,7 @@
 
 const { MemoryCard, Tag, Group, ChatSession, ChatMessage } = require('../models');
 const { generateTags, generateInitialPrompt } = require('../services/azureAIService');
+const { v4: uuidv4 } = require('uuid');
 const uploadImage = require('../utils/uploadImage');
 const uploadAudio = require('../utils/uploadAudio');
 const dotenv = require('dotenv');
@@ -208,14 +209,63 @@ const saveChatHistory = async (req, res) => {
   }
 };
 */
+// const saveChatHistory = async (req, res) => {
+//   const { mcId } = req.params;
+//   const { messages } = req.body;
+
+//   try {
+//     let chatSession = await ChatSession.findOne({ where: { mcId } });
+//     if (!chatSession) {
+//       chatSession = await ChatSession.create({ mcId, groupId: req.body.groupId });
+//     }
+
+//     const savedMessages = [];
+
+//     for (let message of messages) {
+//       const savedMessage = await ChatMessage.create({
+//         chatId: chatSession.chatId,
+//         mcId,
+//         groupId: chatSession.groupId,
+//         content: message.content,
+//         voice: message.audioRecord ? message.audioRecord.fileName : null
+//       });
+
+//       savedMessages.push({
+//         id: savedMessage.messageId,
+//         role: message.role,
+//         content: savedMessage.content,
+//         audioRecord: message.audioRecord ? {
+//           fileName: message.audioRecord.fileName,
+//           isUser: message.audioRecord.isUser,
+//           duration: message.audioRecord.duration
+//         } : null
+//       });
+//     }
+
+//     res.status(200).json({ 
+//       status: true, 
+//       data: savedMessages,
+//       message: "Chat history saved successfully" 
+//     });
+//   } catch (error) {
+//     console.error("Error in saveChatHistory:", error);
+//     res.status(500).json({ status: false, message: "Failed to save chat history" });
+//   }
+// };
+/*
 const saveChatHistory = async (req, res) => {
   const { mcId } = req.params;
-  const { messages } = req.body;
+  const { messages, groupId } = req.body;  // groupId를 클라이언트에서 받습니다.
+
 
   try {
     let chatSession = await ChatSession.findOne({ where: { mcId } });
     if (!chatSession) {
-      chatSession = await ChatSession.create({ mcId, groupId: req.body.groupId });
+      const memoryCard = await MemoryCard.findByPk(mcId);
+      if (!memoryCard) {
+        return res.status(404).json({ status: false, message: "Memory card not found" });
+      }
+      chatSession = await ChatSession.create({ mcId, groupId: memoryCard.groupId });
     }
 
     const savedMessages = [];
@@ -251,7 +301,54 @@ const saveChatHistory = async (req, res) => {
     res.status(500).json({ status: false, message: "Failed to save chat history" });
   }
 };
+*/
+const saveChatHistory = async (req, res) => {
+  const { mcId } = req.params;
+  const { messages, groupId } = req.body;
 
+  try {
+    let chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      chatSession = await ChatSession.create({ 
+        mcId, 
+        groupId,
+        chatId: uuidv4() // UUID 생성
+      });
+    }
+
+    const savedMessages = [];
+
+    for (let message of messages) {
+      const savedMessage = await ChatMessage.create({
+        chatId: chatSession.chatId,
+        mcId,
+        groupId,
+        content: message.content,
+        voice: message.audioRecord ? message.audioRecord.fileName : null
+      });
+
+      savedMessages.push({
+        id: savedMessage.messageId,
+        role: message.role,
+        content: savedMessage.content,
+        audioRecord: message.audioRecord ? {
+          fileName: message.audioRecord.fileName,
+          isUser: message.audioRecord.isUser,
+          duration: message.audioRecord.duration
+        } : null
+      });
+    }
+
+    res.status(200).json({ 
+      status: true, 
+      data: savedMessages,
+      message: "Chat history saved successfully" 
+    });
+  } catch (error) {
+    console.error("Error in saveChatHistory:", error);
+    res.status(500).json({ status: false, message: "Failed to save chat history" });
+  }
+};
 
 const getChatHistory = async (req, res) => {
   const { mcId } = req.params;
