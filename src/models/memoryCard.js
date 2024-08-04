@@ -19,11 +19,11 @@ class MemoryCard extends Sequelize.Model {
           allowNull: false,
         },
         year: {
-          type: Sequelize.STRING(10),
+          type: Sequelize.DATE,
           allowNull: false,
         },
         image: {
-          type: Sequelize.STRING(200),
+          type: Sequelize.STRING(1000),
           allowNull: false,
         },
         summary: {
