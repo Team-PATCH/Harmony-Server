@@ -432,7 +432,7 @@ const getMemoryCards = async (req, res) => {
       data: memoryCards.map(card => ({
         memorycardId: card.mcId,
         title: card.title,
-        dateTime: card.createdAt,
+        dateTime: card.year,
         image: card.image,
         tags: card.Tags.map(tag => tag.name)
       })),
@@ -470,7 +470,7 @@ const getMemoryCardById = async (req, res) => {
       status: true,
       memorycardId: memoryCard.mcId,
       title: memoryCard.title,
-      dateTime: memoryCard.createdAt,
+      dateTime: memoryCard.year,
       tags: memoryCard.Tags.map(tag => tag.name),
       image: memoryCard.image,
       description: memoryCard.summary,
@@ -543,7 +543,7 @@ const createMemoryCard = async (req, res) => {
           data: {
               memorycardId: newMemoryCard.mcId,
               title: newMemoryCard.title,
-              dateTime: newMemoryCard.createdAt,
+              dateTime: newMemoryCard.year,
               image: newMemoryCard.image,
               tags: tags || []
           },
