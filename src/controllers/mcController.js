@@ -4,7 +4,8 @@ const { MemoryCard, Tag, Group, ChatSession, ChatMessage } = require('../models'
 const { generateTags, generateInitialPrompt } = require('../services/azureAIService');
 const { v4: uuidv4 } = require('uuid');
 const uploadImage = require('../utils/uploadImage');
-const uploadAudio = require('../utils/uploadAudio');
+// const uploadAudio = require('../utils/uploadAudio');
+const { upload, uploadAudio } = require('../utils/uploadAudio');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -473,7 +474,8 @@ const saveChatHistory = async (req, res) => {
 //     res.status(500).json({ status: false, message: "Failed to save chat history" });
 //   }
 // };
-
+/*
+// mark - uploadAudio 변경 전 잘 작동했던 saveChatHistory 메서드
 const saveChatHistory = async (req, res) => {
   const { mcId } = req.params;
   const { data } = req.body;
@@ -532,7 +534,146 @@ const saveChatHistory = async (req, res) => {
     res.status(500).json({ status: false, message: "Failed to save chat history" });
   }
 };
+*/
 
+// const saveChatHistory = async (req, res) => {
+//   const { mcId } = req.params;
+//   console.log("Received files:", req.files);
+//   console.log("Received body:", req.body);
+
+//   let data;
+//   try {
+//     data = JSON.parse(req.body.data);
+//   } catch (error) {
+//     console.error("Error parsing request body:", error);
+//     return res.status(400).json({ status: false, message: "Invalid JSON in request body" });
+//   }
+
+//   const { groupId, messages } = data;
+
+//   try {
+//     let chatSession = await ChatSession.findOne({ where: { mcId } });
+//     if (!chatSession) {
+//       chatSession = await ChatSession.create({ 
+//         mcId, 
+//         groupId,
+//         chatId: uuidv4()
+//       });
+//     }
+
+//     const savedMessages = [];
+
+//     for (let message of messages) {
+//       let voiceUrl = null;
+//       if (message.audioRecord) {
+//         const audioFile = req.files.find(file => file.originalname === message.audioRecord.fileName);
+//         if (audioFile) {
+//           voiceUrl = audioFile.path; // Azure Blob Storage에 업로드된 파일의 URL
+//         }
+//       }
+
+//       const savedMessage = await ChatMessage.create({
+//         chatId: chatSession.chatId,
+//         mcId,
+//         groupId,
+//         content: message.content,
+//         voice: voiceUrl
+//       });
+
+//       savedMessages.push({
+//         id: savedMessage.messageId,
+//         role: message.role,
+//         content: savedMessage.content,
+//         audioRecord: voiceUrl ? {
+//           fileName: voiceUrl,
+//           isUser: message.role === 'user',
+//           duration: message.audioRecord ? message.audioRecord.duration : 0
+//         } : null
+//       });
+//     }
+
+//     res.status(200).json({ 
+//       status: true, 
+//       data: savedMessages,
+//       message: "Chat history saved successfully" 
+//     });
+//   } catch (error) {
+//     console.error("Error in saveChatHistory:", error);
+//     res.status(500).json({ status: false, message: "Failed to save chat history" });
+//   }
+// };
+
+const saveChatHistory = async (req, res) => {
+  const { mcId } = req.params;
+  console.log("Received files:", req.files);
+  console.log("Received body:", req.body);
+
+  let data;
+  try {
+    data = typeof req.body.data === 'string' ? JSON.parse(req.body.data) : req.body.data;
+  } catch (error) {
+    console.error("Error parsing request body:", error);
+    return res.status(400).json({ status: false, message: "Invalid JSON in request body" });
+  }
+
+  const { groupId, messages } = data;
+
+  try {
+    let chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      chatSession = await ChatSession.create({ 
+        mcId, 
+        groupId,
+        chatId: uuidv4()
+      });
+    }
+
+    const savedMessages = [];
+
+    for (let message of messages) {
+      let voiceUrl = null;
+      if (message.audioRecord) {
+        const audioFile = req.files.find(file => file.originalname === message.audioRecord.fileName);
+        if (audioFile) {
+          try {
+            voiceUrl = await uploadAudio(audioFile);
+          } catch (error) {
+            console.error("Error uploading audio:", error);
+          }
+        }
+      }
+
+      const savedMessage = await ChatMessage.create({
+        chatId: chatSession.chatId,
+        mcId,
+        groupId,
+        content: message.content,
+        voice: voiceUrl,
+        role: message.role
+      });
+
+      savedMessages.push({
+        id: savedMessage.messageId,
+        role: savedMessage.role,
+        content: savedMessage.content,
+        audioRecord: voiceUrl ? {
+          fileName: voiceUrl,
+          isUser: message.role === 'user',
+          duration: message.audioRecord ? message.audioRecord.duration : 0
+        } : null
+      });
+    }
+
+    res.status(200).json({ 
+      status: true, 
+      data: savedMessages,
+      message: "Chat history saved successfully" 
+    });
+  } catch (error) {
+    console.error("Error in saveChatHistory:", error);
+    res.status(500).json({ status: false, message: "Failed to save chat history" });
+  }
+};
 
 // const getChatHistory = async (req, res) => {
 //   const { mcId } = req.params;
@@ -605,7 +746,235 @@ const getChatHistory = async (req, res) => {
     res.status(500).json({ status: false, message: "Failed to retrieve chat history" });
   }
 };
+/*
+const updateChatHistory = async (req, res) => {
+  const { mcId } = req.params;
+  let data;
 
+  try {
+    // 만약 req.body가 이미 파싱된 객체라면 그대로 사용, 아니면 파싱 시도
+    data = typeof req.body === 'object' ? req.body : JSON.parse(req.body);
+  } catch (error) {
+    console.error("Error parsing request body:", error);
+    return res.status(400).json({ status: false, message: "Invalid request body" });
+  }
+
+  const { groupId, messages } = data;
+
+  if (!groupId || !messages || !Array.isArray(messages)) {
+    return res.status(400).json({ status: false, message: "Invalid data format" });
+  }
+
+  try {
+    let chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      return res.status(404).json({ status: false, message: "Chat session not found" });
+    }
+
+    // 기존 메시지 삭제
+    await ChatMessage.destroy({ where: { chatId: chatSession.chatId } });
+
+    // 새 메시지 저장
+    const savedMessages = [];
+    for (let message of messages) {
+      const savedMessage = await ChatMessage.create({
+        chatId: chatSession.chatId,
+        mcId,
+        groupId,
+        content: message.content,
+        voice: message.audioRecord ? message.audioRecord.fileName : null
+      });
+      savedMessages.push({
+        id: savedMessage.messageId,
+        role: message.role,
+        content: savedMessage.content,
+        audioRecord: message.audioRecord ? {
+          fileName: message.audioRecord.fileName,
+          isUser: message.audioRecord.isUser,
+          duration: message.audioRecord.duration
+        } : null
+      });
+    }
+
+    res.status(200).json({ 
+      status: true, 
+      data: savedMessages,
+      message: "Chat history updated successfully" 
+    });
+  } catch (error) {
+    console.error("Error in updateChatHistory:", error);
+    res.status(500).json({ status: false, message: "Failed to update chat history" });
+  }
+};
+*/
+
+/*
+const updateChatHistory = async (req, res) => {
+  const { mcId } = req.params;
+  console.log('Received body:', req.body);
+  console.log('Received files:', req.files);
+
+  let data;
+  try {
+    data = typeof req.body.data === 'string' ? JSON.parse(req.body.data) : req.body.data;
+  } catch (error) {
+    console.error("Error parsing request body:", error);
+    return res.status(400).json({ status: false, message: "Invalid JSON in request body" });
+  }
+
+  const { groupId, messages } = data;
+
+  try {
+    let chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      chatSession = await ChatSession.create({ mcId, groupId, chatId: uuidv4() });
+    }
+
+    // 기존 메시지 삭제
+    await ChatMessage.destroy({ where: { chatId: chatSession.chatId } });
+
+    // 새 메시지 저장
+    const savedMessages = [];
+    for (let message of messages) {
+      let voiceFileName = null;
+      if (message.audioRecord) {
+        const audioFile = req.files.find(file => file.originalname === message.audioRecord.fileName);
+        if (audioFile) {
+          voiceFileName = await uploadAudio.uploadAudioFile(audioFile);  // uploadAudio 함수 수정
+        }
+      }
+
+      const savedMessage = await ChatMessage.create({
+        chatId: chatSession.chatId,
+        mcId,
+        groupId,
+        content: message.content,
+        voice: voiceFileName
+      });
+
+      savedMessages.push({
+        id: savedMessage.messageId,
+        role: message.role,
+        content: savedMessage.content,
+        audioRecord: voiceFileName ? {
+          fileName: voiceFileName,
+          isUser: message.audioRecord.isUser,
+          duration: message.audioRecord.duration
+        } : null
+      });
+    }
+
+    res.status(200).json({ 
+      status: true, 
+      data: savedMessages,
+      message: "Chat history updated successfully" 
+    });
+  } catch (error) {
+    console.error("Error in updateChatHistory:", error);
+    res.status(500).json({ status: false, message: "Failed to update chat history" });
+  }
+};
+*/
+
+const updateChatHistory = async (req, res) => {
+  const { mcId } = req.params;
+  console.log("Received files:", req.files);
+  console.log("Received body:", req.body);
+
+  let data;
+  try {
+    data = typeof req.body.data === 'string' ? JSON.parse(req.body.data) : req.body.data;
+  } catch (error) {
+    console.error("Error parsing request body:", error);
+    return res.status(400).json({ status: false, message: "Invalid JSON in request body" });
+  }
+
+  const { groupId, messages } = data;
+
+  try {
+    let chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      return res.status(404).json({ status: false, message: "Chat session not found" });
+    }
+
+    const existingMessages = await ChatMessage.findAll({
+      where: { chatId: chatSession.chatId },
+      order: [['createdAt', 'ASC']]
+    });
+
+    const savedMessages = [];
+    let newMessagesStartIndex = 0;
+
+    // Find the index where new messages start
+    for (let i = 0; i < messages.length; i++) {
+      if (i >= existingMessages.length || 
+          messages[i].content !== existingMessages[i].content || 
+          messages[i].role !== existingMessages[i].role) {
+        newMessagesStartIndex = i;
+        break;
+      }
+    }
+
+    // Keep existing messages
+    savedMessages.push(...existingMessages.slice(0, newMessagesStartIndex).map(msg => ({
+      id: msg.messageId,
+      role: msg.role,
+      content: msg.content,
+      audioRecord: msg.voice ? {
+        fileName: msg.voice,
+        isUser: msg.role === 'user',
+        duration: 0 // You might want to store this information in the database
+      } : null
+    })));
+
+    // Add new messages
+    for (let i = newMessagesStartIndex; i < messages.length; i++) {
+      const message = messages[i];
+      let voiceUrl = null;
+      if (message.audioRecord) {
+        const audioFile = req.files.find(file => file.originalname === message.audioRecord.fileName);
+        if (audioFile) {
+          try {
+            voiceUrl = await uploadAudio(audioFile);
+          } catch (error) {
+            console.error("Error uploading audio:", error);
+          }
+        }
+      }
+
+      if (voiceUrl) { // Only save messages with audio
+        const newMessage = await ChatMessage.create({
+          chatId: chatSession.chatId,
+          mcId,
+          groupId,
+          content: message.content,
+          voice: voiceUrl,
+          role: message.role
+        });
+
+        savedMessages.push({
+          id: newMessage.messageId,
+          role: newMessage.role,
+          content: newMessage.content,
+          audioRecord: {
+            fileName: voiceUrl,
+            isUser: message.role === 'user',
+            duration: message.audioRecord ? message.audioRecord.duration : 0
+          }
+        });
+      }
+    }
+
+    res.status(200).json({ 
+      status: true, 
+      data: savedMessages,
+      message: "Chat history updated successfully" 
+    });
+  } catch (error) {
+    console.error("Error in updateChatHistory:", error);
+    res.status(500).json({ status: false, message: "Failed to update chat history" });
+  }
+};
 
 const getInitialPrompt = async (req, res) => {
   const { mcId } = req.params;
@@ -788,6 +1157,7 @@ module.exports = {
   getMemoryCards,
   getMemoryCardById,
   createMemoryCard,
+  updateChatHistory,
   uploadImage,
   uploadAudio // 여기서 upload를 내보냅니다.
 };

@@ -30,6 +30,10 @@ class ChatMessage extends Sequelize.Model {
           type: Sequelize.STRING(1000),
           allowNull: true,
         },
+        role: {
+          type: Sequelize.STRING(100),  // STRING 타입으로 변경, 길이는 필요에 따라 조정 가능
+          allowNull: true,
+        },
       },
       {
         sequelize,
