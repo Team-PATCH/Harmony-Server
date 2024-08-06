@@ -302,6 +302,9 @@ const saveChatHistory = async (req, res) => {
   }
 };
 */
+
+/*
+// 0805 채팅기록까지 저장되는 코드, 음성 파일은 Azure Blob Storage에 저장되지 않는 코드였습니다.
 const saveChatHistory = async (req, res) => {
   const { mcId } = req.params;
   const { messages, groupId } = req.body;
@@ -349,6 +352,223 @@ const saveChatHistory = async (req, res) => {
     res.status(500).json({ status: false, message: "Failed to save chat history" });
   }
 };
+*/
+
+// 이 코드는 클라이언트에서 전송된 오디오 파일을 Azure Blob Storage에 업로드합니다.
+// 또한, 채팅 기록을 저장하는 코드입니다.
+
+// const saveChatHistory = async (req, res) => {
+//   const { mcId } = req.params;
+//   const { messages, groupId } = req.body;
+//   const audioFiles = req.files; // 멀티파트 폼 데이터로 전송된 오디오 파일들
+
+//   try {
+//     let chatSession = await ChatSession.findOne({ where: { mcId } });
+//     if (!chatSession) {
+//       chatSession = await ChatSession.create({ 
+//         mcId, 
+//         groupId,
+//         chatId: uuidv4()
+//       });
+//     }
+
+//     const savedMessages = [];
+
+//     for (let message of messages) {
+//       let voiceUrl = null;
+//       if (message.audioRecord && audioFiles[`audio_${message.id}`]) {
+//         const file = audioFiles[`audio_${message.id}`];
+//         voiceUrl = file.url; // Azure Blob Storage에 업로드된 파일의 URL
+//       }
+
+//       const savedMessage = await ChatMessage.create({
+//         chatId: chatSession.chatId,
+//         mcId,
+//         groupId,
+//         content: message.content,
+//         voice: voiceUrl
+//       });
+
+//       savedMessages.push({
+//         id: savedMessage.messageId,
+//         role: message.role,
+//         content: savedMessage.content,
+//         audioRecord: voiceUrl ? {
+//           fileName: voiceUrl,
+//           isUser: message.role === 'user',
+//           duration: message.audioRecord.duration
+//         } : null
+//       });
+//     }
+
+//     res.status(200).json({ 
+//       status: true, 
+//       data: savedMessages,
+//       message: "Chat history saved successfully" 
+//     });
+//   } catch (error) {
+//     console.error("Error in saveChatHistory:", error);
+//     res.status(500).json({ status: false, message: "Failed to save chat history" });
+//   }
+// };
+
+// 이 메서드로 Azure Blob Storage에 오디오 파일 업로드 되는 걸 확인했음.
+// const saveChatHistory = async (req, res) => {
+
+//   console.log("Received data:", req.body);
+//   console.log("Received files:", req.files);
+
+//   const { mcId } = req.params;
+//   const { data } = req.body;
+//   const parsedData = JSON.parse(data);
+//   const { groupId, messages } = parsedData;
+//   const audioFiles = req.files;
+
+//   try {
+//     let chatSession = await ChatSession.findOne({ where: { mcId } });
+//     if (!chatSession) {
+//       chatSession = await ChatSession.create({ 
+//         mcId, 
+//         groupId,
+//         chatId: uuidv4()
+//       });
+//     }
+
+//     const savedMessages = [];
+
+//     for (let message of messages) {
+//       let voiceUrl = null;
+//       if (message.audioRecord && audioFiles[`audio_${message.id}`]) {
+//         const file = audioFiles[`audio_${message.id}`];
+//         voiceUrl = file.url; // Azure Blob Storage에 업로드된 파일의 URL
+//       }
+
+//       const savedMessage = await ChatMessage.create({
+//         chatId: chatSession.chatId,
+//         mcId,
+//         groupId,
+//         content: message.content,
+//         voice: voiceUrl
+//       });
+
+//       savedMessages.push({
+//         id: savedMessage.messageId,
+//         role: message.role,
+//         content: savedMessage.content,
+//         audioRecord: voiceUrl ? {
+//           fileName: voiceUrl,
+//           isUser: message.role === 'user',
+//           duration: message.audioRecord.duration
+//         } : null
+//       });
+//     }
+
+//     res.status(200).json({ 
+//       status: true, 
+//       data: savedMessages,
+//       message: "Chat history saved successfully" 
+//     });
+//   } catch (error) {
+//     console.error("Error in saveChatHistory:", error);
+//     res.status(500).json({ status: false, message: "Failed to save chat history" });
+//   }
+// };
+
+const saveChatHistory = async (req, res) => {
+  const { mcId } = req.params;
+  const { data } = req.body;
+  const parsedData = JSON.parse(data);
+  const { groupId, messages } = parsedData;
+  const audioFiles = req.files;
+
+  try {
+    let chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      chatSession = await ChatSession.create({ 
+        mcId, 
+        groupId,
+        chatId: uuidv4()
+      });
+    }
+
+    const savedMessages = [];
+
+    for (let message of messages) {
+      let voiceUrl = null;
+      if (message.audioRecord) {
+        const audioFile = audioFiles.find(file => file.originalname === message.audioRecord.fileName);
+        if (audioFile) {
+          voiceUrl = audioFile.url;
+        }
+      }
+
+      const savedMessage = await ChatMessage.create({
+        chatId: chatSession.chatId,
+        mcId,
+        groupId,
+        content: message.content,
+        voice: voiceUrl
+      });
+
+      savedMessages.push({
+        id: savedMessage.messageId,
+        role: message.role,
+        content: savedMessage.content,
+        audioRecord: voiceUrl ? {
+          fileName: voiceUrl,
+          isUser: message.role === 'user',
+          duration: message.audioRecord ? message.audioRecord.duration : 0
+        } : null
+      });
+    }
+
+    res.status(200).json({ 
+      status: true, 
+      data: savedMessages,
+      message: "Chat history saved successfully" 
+    });
+  } catch (error) {
+    console.error("Error in saveChatHistory:", error);
+    res.status(500).json({ status: false, message: "Failed to save chat history" });
+  }
+};
+
+
+// const getChatHistory = async (req, res) => {
+//   const { mcId } = req.params;
+
+//   try {
+//     const chatSession = await ChatSession.findOne({ where: { mcId } });
+//     if (!chatSession) {
+//       return res.status(404).json({ status: false, message: "Chat history not found" });
+//     }
+
+//     const messages = await ChatMessage.findAll({ 
+//       where: { chatId: chatSession.chatId },
+//       order: [['createdAt', 'ASC']]
+//     });
+
+//     const formattedMessages = messages.map(msg => ({
+//       id: msg.messageId,
+//       role: msg.content.startsWith("User:") ? "user" : "assistant",
+//       content: msg.content.replace(/^(User:|Assistant:)/, '').trim(),
+//       audioRecord: msg.voice ? {
+//         fileName: msg.voice,
+//         isUser: msg.content.startsWith("User:"),
+//         duration: 0 // 실제 오디오 길이는 클라이언트에서 처리
+//       } : null
+//     }));
+
+//     res.status(200).json({ 
+//       status: true, 
+//       data: formattedMessages,
+//       message: "Chat history retrieved successfully" 
+//     });
+//   } catch (error) {
+//     console.error("Error in getChatHistory:", error);
+//     res.status(500).json({ status: false, message: "Failed to retrieve chat history" });
+//   }
+// };
 
 const getChatHistory = async (req, res) => {
   const { mcId } = req.params;

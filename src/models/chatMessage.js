@@ -27,7 +27,7 @@ class ChatMessage extends Sequelize.Model {
           allowNull: false,
         },
         voice: {
-          type: Sequelize.STRING(100),
+          type: Sequelize.STRING(1000),
           allowNull: true,
         },
       },

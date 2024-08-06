@@ -2,7 +2,9 @@
 const express = require('express');
 const mcController = require('../controllers/mcController');
 const router = express.Router();
-const upload = require('../utils/uploadAudio');
+// const upload = require('../utils/uploadAudio');
+const uploadAudio = require('../utils/uploadAudio');
+
 
 // 모든 메모리 카드 조회
 router.get('/', mcController.getMemoryCards);
@@ -14,8 +16,9 @@ router.get('/:memorycardId', mcController.getMemoryCardById);
 router.post('/', mcController.uploadImage.single('image'), mcController.createMemoryCard);
 
 
-// 대화 기록 저장
-router.post('/:mcId/chat', upload.single('audio'), mcController.saveChatHistory);
+// 대화 기록과 오디오 파일 저장
+// router.post('/:mcId/chat', upload.single('audio'), mcController.saveChatHistory);
+router.post('/:mcId/chat', uploadAudio.any(), mcController.saveChatHistory);
 
 // 대화 기록 조회
 router.get('/:mcId/chat', mcController.getChatHistory);
