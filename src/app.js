@@ -74,7 +74,6 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 // 매시간마다 자정을 확인하고 데일리 일과 생성
-<<<<<<< HEAD
 // cron.schedule('0 * * * *', async () => {
 //   const now = dayjs().tz("Asia/Seoul");
 //   if (now.hour() === 0) { // 한국 표준시 기준 자정 확인
@@ -91,12 +90,3 @@ dayjs.extend(timezone);
 //   console.log('Running daily routine creation job at 15:10 KST');
 //   await createDailyRoutines();
 // });
-=======
-cron.schedule('0 * * * *', async () => {
-  const now = dayjs().tz("Asia/Seoul");
-  if (now.hour() === 0) { // 한국 표준시 기준 자정 확인
-    console.log('Running daily routine creation job at midnight KST');
-    await createDailyRoutines();
-  }
-});
->>>>>>> 08d1981 ([Chore] 주석 코드 제거)
