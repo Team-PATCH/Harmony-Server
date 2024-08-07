@@ -20,5 +20,9 @@ router.post('/answer/:questionId', questionController.postAnswer);
 router.post('/updateanswer/:questionId', questionController.updateAnswer);
 //질문카드 코멘트 저장
 router.post('/comment', questionController.postComment);
+//댓글 수정 라우트
+router.put('/comment/:commentId', questionController.updateComment);
+// 댓글 삭제 라우트
+router.delete('/comment/:commentId', questionController.deleteComment);
 
 module.exports = router;

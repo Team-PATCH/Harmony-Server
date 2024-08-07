@@ -126,7 +126,7 @@ const provingDailyRoutine = async (req, res) => {
 const addReaction = async (req, res) => {
     try {
         const { dailyId } = req.params;
-        const { routineId, groupId, authorId, photo, comment } = req.body;
+        const { routineId, groupId, authorId, comment } = req.body;
 
         const dailyRoutine = await DailyRoutine.findByPk(dailyId);
         if (!dailyRoutine) {
@@ -136,6 +136,9 @@ const addReaction = async (req, res) => {
                 message: "Daily routine not found"
             });
         }
+
+        const photo = req.filename ? `${process.env.AZURE_BLOB_BASE_URL}${req.filename}` : null;
+        console.log("photo:", photo)
 
         const reaction = await RoutineReaction.create({
             dailyId,
