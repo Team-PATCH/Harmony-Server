@@ -99,6 +99,7 @@ const getSummary = async (req, res) => {
 };
 */
 
+/*
 const getSummary = async (req, res) => {
   const { mcId } = req.params;
   const forceUpdate = req.query.forceUpdate === 'true';
@@ -113,7 +114,7 @@ const getSummary = async (req, res) => {
     if (!chatSession) {
       return res.status(200).json({ 
         status: true, 
-        data: "아직 대화 내용이 없습니다.",
+        data: "아직 이 추억에 대해 대화를 나누지 않았네요.\n모니와 대화를 시작해보세요!😄",
         message: "No chat session available" 
       });
     }
@@ -127,7 +128,7 @@ const getSummary = async (req, res) => {
     if (messages.length === 0) {
       return res.status(200).json({ 
         status: true, 
-        data: "아직 대화 내용이 없습니다.",
+        data: "아직 이 추억에 대해 대화를 나누지 않았네요.\n모니와 대화를 시작해보세요!😄",
         message: "No chat history" 
       });
     }
@@ -157,6 +158,70 @@ const getSummary = async (req, res) => {
     res.status(500).json({ status: false, message: "Failed to retrieve summary" });
   }
 };
+*/
+
+const getSummary = async (req, res) => {
+  const { mcId } = req.params;
+  const forceUpdate = req.query.forceUpdate === 'true';
+
+  try {
+    let memoryCard = await MemoryCard.findByPk(mcId);
+    if (!memoryCard) {
+      return res.status(404).json({ status: false, message: "Memory card not found" });
+    }
+
+    const chatSession = await ChatSession.findOne({ where: { mcId } });
+    if (!chatSession) {
+      return res.status(200).json({ 
+        status: true, 
+        data: { summary: "아직 이 추억에 대해 대화를 나누지 않았네요.\n모니와 대화를 시작해보세요!😄", lastMessageId: null },
+        message: "No chat session available" 
+      });
+    }
+
+    const messages = await ChatMessage.findAll({ 
+      where: { chatId: chatSession.chatId },
+      order: [['createdAt', 'ASC']]
+    });
+
+    // 메시지가 없으면 기존 데이터 반환
+    if (messages.length === 0) {
+      return res.status(200).json({ 
+        status: true, 
+        data: { summary: "아직 이 추억에 대해 대화를 나누지 않았네요.\n모니와 대화를 시작해보세요!😄", lastMessageId: null },
+        message: "No chat history" 
+      });
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    const lastMessageId = lastMessage ? lastMessage.messageId : null;
+
+    // 요약이 이미 있고 forceUpdate가 false면 기존 요약 반환
+    if (memoryCard.summary && !forceUpdate) {
+      return res.status(200).json({ 
+        status: true, 
+        data: { summary: memoryCard.summary, lastMessageId },
+        message: "Existing summary retrieved" 
+      });
+    }
+
+    const chatContent = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+    const summary = await generateSummary(chatContent);
+    
+    memoryCard.summary = summary;
+    await memoryCard.save();
+
+    res.status(200).json({ 
+      status: true, 
+      data: { summary, lastMessageId },
+      message: "Summary generated and retrieved successfully" 
+    });
+  } catch (error) {
+    console.error("Error in getSummary:", error);
+    res.status(500).json({ status: false, message: "Failed to retrieve summary" });
+  }
+};
+
 
 /* // 정상 동작 버전 saveChatHistory 메서드
 const saveChatHistory = async (req, res) => {
