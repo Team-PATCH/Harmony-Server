@@ -192,8 +192,10 @@ const getChatHistory = async (req, res) => {
 
     const formattedMessages = messages.map(msg => ({
       id: msg.messageId,
-      role: msg.content.startsWith("User:") ? "user" : "assistant",
-      content: msg.content.replace(/^(User:|Assistant:)/, '').trim(),
+      // role: msg.content.startsWith("User:") ? "user" : "assistant",
+      // content: msg.content.replace(/^(User:|Assistant:)/, '').trim(),
+      role: msg.role,
+      content: msg.content,
       audioRecord: msg.voice ? {
         fileName: msg.voice,
         isUser: msg.content.startsWith("User:"),
@@ -303,7 +305,7 @@ const updateChatHistory = async (req, res) => {
     }
 
     res.status(200).json({ 
-      status: true, 
+      status: true,
       data: savedMessages,
       message: "Chat history updated successfully" 
     });
