@@ -196,6 +196,7 @@ const getChatHistory = async (req, res) => {
       // content: msg.content.replace(/^(User:|Assistant:)/, '').trim(),
       role: msg.role,
       content: msg.content,
+      createdAt: msg.createdAt,
       audioRecord: msg.voice ? {
         fileName: msg.voice,
         isUser: msg.content.startsWith("User:"),
