@@ -9,6 +9,7 @@ const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const { createDailyRoutines } = require('./controllers/dailyRoutineController');
+const bodyParser = require('body-parser'); // 추가된 부분
 dotenv.config();
 
 const db = require('./models');
@@ -30,9 +31,18 @@ const port = process.env.PORT;
 console.log('PORT:', process.env.PORT);
 
 app.use(morgan('dev'));
+app.use(bodyParser.json()); // 추가된 부분
+app.use(bodyParser.urlencoded({ extended: true })); // 추가된 부분
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/user', userRouter);
+app.use((req, res, next) => {
+  if (req.method === 'PUT') {
+    console.log('PUT request body:', req.body);
+  }
+  next();
+});
+
 
 // app.use(authMiddleware.verifyToken);
 
