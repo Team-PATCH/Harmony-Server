@@ -70,6 +70,9 @@ router.patch('/:mcId/chat', upload.array('audio'), mcController.updateChatHistor
 // 대화 기록 조회
 router.get('/:mcId/chat', mcController.getChatHistory);
 
+// 대화 요약 조회
+router.get('/:mcId/summary', mcController.getSummary);
+
 // 초기 프롬프트 조회
 router.get('/:mcId/initial-prompt', mcController.getInitialPrompt);
 
