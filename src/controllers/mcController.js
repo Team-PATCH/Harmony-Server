@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const uploadImage = require('../utils/uploadImage');
 // const uploadAudio = require('../utils/uploadAudio');
 const { upload, uploadAudio } = require('../utils/uploadAudio');
+const { notifyChatMessage, notifyNewMemoryCard } = require('./notificationController');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -164,6 +165,9 @@ const saveChatHistory = async (req, res) => {
         });
       }
     }
+    
+    // 채팅 메시지 알림 발송
+    await notifyChatMessage(chatSession);
 
     res.status(200).json({ 
       status: true, 
@@ -467,6 +471,9 @@ const createMemoryCard = async (req, res) => {
               });
           }
       }
+
+      // 새 메모리 카드 생성 알림 발송
+      await notifyNewMemoryCard(newMemoryCard);
 
       res.status(201).json({
           status: true,
