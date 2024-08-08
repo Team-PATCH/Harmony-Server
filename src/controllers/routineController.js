@@ -1,8 +1,10 @@
 const Routine = require("../models/routine");
 const DailyRoutine = require("../models/dailyRoutine");
+const UserGroup = require("../models/userGroup");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
+const { notifyNewRoutine, notifyRoutineUpdate } = require('./notificationController');
 
 // 플러그인 사용 설정
 dayjs.extend(utc);
@@ -56,7 +58,9 @@ const createRoutine = async (req, res) => {
         }
 
         const newRoutine = await Routine.create({ routineId, groupId, title, days, time });
-        console.log("Created routine:", newRoutine);
+
+        // 새 일과 형성 알림 보내기
+        await notifyNewRoutine(newRoutine);
 
         // 현재 날짜와 요일을 가져옴
         const today = dayjs().tz("Asia/Seoul");
@@ -111,6 +115,9 @@ const updateRoutine = async (req, res) => {
 
         await routine.save();
         console.log("Updated routine:", routine);
+
+        // 알림 보내기
+        await notifyRoutineUpdate(routine);
 
         // 현재 날짜와 요일을 가져옴
         const today = dayjs().tz("Asia/Seoul");
