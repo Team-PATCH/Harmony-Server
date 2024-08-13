@@ -94,7 +94,27 @@ async function notifyNewComment(comment, question) {
   };
   return await sendGroupNotification(comment.groupId, null, alert, payload);
 }
+// 새 메모리 카드 생성 알림 보내기
+async function notifyNewMemoryCard(memoryCard) {
+  console.log(`Notifying group members about new memory card: ${memoryCard.mcId}`);
+  const alert = "새로운 추억 카드가 생성되었습니다!";
+  const payload = {
+    mcId: memoryCard.mcId,
+    title: memoryCard.title
+  };
+  return await sendGroupNotification(memoryCard.groupId, null, alert, payload);
+}
 
+// 새 채팅 메시지 알림 보내기
+async function notifyChatMessage(chatSession) {
+  console.log(`Notifying group members about new chat message in session: ${chatSession.chatId}`);
+  const alert = "VIP가 새로운 추억카드를 공유하였습니다!";
+  const payload = {
+    chatId: chatSession.chatId,
+    mcId: chatSession.mcId
+  };
+  return await sendGroupNotification(chatSession.groupId, null, alert, payload);
+}
 
 //ROUTINE PART
 
@@ -161,6 +181,8 @@ module.exports = {
   notifyNewAnswer,
   notifyNewComment,
   notifyAnswerUpdate,
+  notifyNewMemoryCard,
+  notifyChatMessage
   notifyNewRoutine,
   notifyRoutineUpdate,
   notifyVIPRoutineCompletion,
