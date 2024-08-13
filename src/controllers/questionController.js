@@ -279,21 +279,28 @@ const getCurrentQuestion = async (req, res) => {
     const groupId = req.params.groupId;
     const today = moment().startOf("day");
 
+    console.log(`Fetching current question for groupId: ${groupId}`);
+    console.log(`Today's date: ${today.format()}`);
+
+    // 1. 가장 최근의 답변되지 않은 질문 찾기
     let question = await Question.findOne({
       where: {
         groupId: groupId,
-        createdAt: {
-          [Op.gte]: today.toDate(),
-          [Op.lt]: moment(today).endOf("day").toDate(),
-        },
+        answer: null
       },
       order: [["createdAt", "DESC"]],
     });
 
+    console.log("Step 1 - Most recent unanswered question:", question ? JSON.stringify(question) : "None");
+
+    // 2. 답변되지 않은 질문이 없으면 새 질문 생성
     if (!question) {
+      console.log("No unanswered question, creating a new one...");
       const provideQuestion = await ProvideQuestion.findOne({
         order: [["pqid", "ASC"]],
       });
+
+      console.log("ProvideQuestion found:", provideQuestion ? JSON.stringify(provideQuestion) : "None");
 
       if (provideQuestion) {
         question = await Question.create({
@@ -303,10 +310,13 @@ const getCurrentQuestion = async (req, res) => {
         });
 
         await provideQuestion.destroy();
+        console.log("New question created:", JSON.stringify(question));
+      } else {
+        console.log("No provide question available for creating a new question.");
       }
     }
 
-    console.log("현재 질문:", question);
+    console.log("Final current question:", question ? JSON.stringify(question) : "No question available");
 
     if (question) {
       res.status(200).json({
@@ -335,7 +345,7 @@ const getQuestions = async (req, res) => {
     const questions = await Question.findAll({
       where: { groupId: req.params.groupId },
       order: [["questionId", "DESC"]],
-      limit: 3,
+      limit: 5,
     });
     res.status(200).json({
       status: "success",
@@ -485,7 +495,7 @@ const getNextQuestion = async (req, res) => {
 
 // cron 작업 설정 - 매일 8:00에 새 질문 생성
 function setupCronJobs() {
-  cron.schedule("00 08 * * *", createDailyQuestion);
+  cron.schedule("48 11 * * *", createDailyQuestion);
 }
 
 module.exports = {
