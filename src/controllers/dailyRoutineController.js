@@ -77,10 +77,12 @@ const createDailyRoutines = async () => {
         const todayRoutines = routines.filter(routine => (routine.days & (1 << (6 - weekday))) !== 0);
 
         for (const routine of todayRoutines) {
+            const routineTime = dayjs(today.format('YYYY-MM-DD') + ' ' + routine.time).tz("Asia/Seoul").toDate();
+
             await DailyRoutine.create({
                 routineId: routine.routineId,
                 groupId: routine.groupId,
-                time: today.toDate(),
+                time: routineTime,
                 completedPhoto: null,
                 completedTime: null
             });
