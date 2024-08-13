@@ -23,7 +23,14 @@ exports.createGroup = async (req, res) => {
       deviceToken
     });
     
-    res.status(201).json({ group, inviteUrl, vipInviteUrl });
+    const response = {
+      groupId: group.groupId,
+      groupName: group.name,
+      inviteUrl: group.inviteUrl,
+      vipInviteUrl: group.vipInviteUrl
+    };
+    
+    res.status(201).json(response);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
@@ -32,7 +39,7 @@ exports.createGroup = async (req, res) => {
 
 exports.joinGroup = async (req, res) => {
     try {
-      const { userId, inviteCode, deviceToken, alias } = req.body;
+      const { userId, inviteCode, deviceToken } = req.body;
       
       const group = await Group.findOne({
         where: {
@@ -65,8 +72,7 @@ exports.joinGroup = async (req, res) => {
         userId,
         groupId: group.groupId,
         permissionId,
-        deviceToken,
-        alias
+        deviceToken
       });
   
       if (isVipInvite) {
@@ -78,7 +84,8 @@ exports.joinGroup = async (req, res) => {
       
       res.status(200).json({ 
         message: isVipInvite ? 'VIP로 그룹에 성공적으로 가입했습니다.' : '그룹에 성공적으로 가입했습니다.',
-        group: await Group.findByPk(group.groupId)  // 업데이트된 그룹 정보를 반환
+        group: await Group.findByPk(group.groupId),
+        permission: isVipInvite ? 'v' : 'm'  // 업데이트된 그룹 정보를 반환
       });
     } catch (error) {
       console.error(error);
@@ -153,40 +160,55 @@ exports.regenerateInviteCode = async (req, res) => {
 };
 
 exports.updateOnboardingInfo = async (req, res) => {
-    try {
+  try {
       const { groupId } = req.params;
-      const { userId, alias, deviceToken } = req.body;
-  
+      const { userId, nick, alias, profile, deviceToken } = req.body;
+
       // UserGroup 레코드 찾기
       const userGroup = await UserGroup.findOne({
-        where: {
-          userId,
-          groupId
-        }
+          where: {
+              userId,
+              groupId
+          }
       });
-  
+
       if (!userGroup) {
-        return res.status(404).json({ message: '해당 그룹에 가입되어 있지 않습니다.' });
+          return res.status(404).json({ message: '해당 그룹에 가입되어 있지 않습니다.' });
       }
-  
+
       // UserGroup 업데이트
       await userGroup.update({
-        alias,
-        deviceToken
+          alias,
+          deviceToken
       });
-  
-      res.status(200).json({
-        message: '온보딩 정보가 성공적으로 업데이트되었습니다.',
-        userGroup: await UserGroup.findOne({
+
+      // User 찾기
+      const user = await User.findByPk(userId);
+      if (!user) {
+          return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+      }
+
+      // User 업데이트
+      await user.update({
+          nick,
+          profile
+      });
+
+      // 업데이트된 UserGroup 정보 가져오기
+      const updatedUserGroup = await UserGroup.findOne({
           where: {
-            userId,
-            groupId
-          }
-        })
+              userId,
+              groupId
+          },
+          include: [{ model: User, attributes: ['nick', 'profile'] }]
       });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: '서버 오류가 발생했습니다.' });
-    }
-  };
-  
+
+      res.status(200).json({
+          message: '온보딩 정보가 성공적으로 업데이트되었습니다.',
+          userGroup: updatedUserGroup
+      });
+  } catch (error) {
+      console.error('updateOnboardingInfo 에러:', error);
+      res.status(500).json({ message: '서버 오류가 발생했습니다.', error: error.message });
+  }
+};

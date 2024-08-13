@@ -1,14 +1,15 @@
 const { Sequelize } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 class ChatSession extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
         chatId: {
-          type: Sequelize.STRING(100),
+          type: Sequelize.UUID,
+          defaultValue: Sequelize.UUIDV4,
           allowNull: false,
           primaryKey: true,
-          defaultValue: '채팅세션(chat 스레드)', // 기본값 설정
         },
         mcId: {
           type: Sequelize.INTEGER,
@@ -24,7 +25,7 @@ class ChatSession extends Sequelize.Model {
         modelName: 'ChatSession',
         tableName: 'chatsession',
         timestamps: true,
-        paranoid: true, // deletedAt 필드 사용
+        paranoid: true,
       }
     );
   }
