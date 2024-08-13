@@ -1,12 +1,15 @@
 const Routine = require("../models/routine");
 const DailyRoutine = require("../models/dailyRoutine");
 const RoutineReaction = require("../models/routionReaction");
+const UserGroup = require("../models/userGroup");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const { Op } = require("sequelize");
 const upload = require("../utils/uploadImage");
 const dotenv = require('dotenv');
+const { notifyVIPRoutineCompletion } = require('./notificationController');
+const { notifyNewRoutineReaction } = require('./notificationController');
 dotenv.config();
 
 dayjs.extend(utc);
@@ -40,17 +43,17 @@ const getTodayDailyRoutines = async (req, res) => {
             return res.status(404).json({
                 status: false,
                 data: [],
-                message: "No daily routines found for today"
+                message: "오늘의 일일 루틴을 찾을 수 없습니다"
             });
         }
 
         res.json({
             status: true,
             data: dailyRoutines,
-            message: "Daily routines for today retrieved successfully"
+            message: "오늘의 일일 루틴을 성공적으로 조회했습니다"
         });
     } catch (error) {
-        console.error("Error in getTodayDailyRoutines:", error);
+        console.error("getTodayDailyRoutines 오류:", error);
         res.status(500).json({
             status: false,
             data: [],
@@ -83,7 +86,7 @@ const createDailyRoutines = async () => {
             });
         }
     } catch (error) {
-        console.error("Error in createDailyRoutines:", error);
+        console.error("createDailyRoutines 오류:", error);
     }
 };
 
@@ -96,7 +99,7 @@ const provingDailyRoutine = async (req, res) => {
             return res.status(404).json({
                 status: false,
                 data: [],
-                message: "Daily routine not found"
+                message: "일일 루틴을 찾을 수 없습니다"
             });
         }
 
@@ -105,15 +108,19 @@ const provingDailyRoutine = async (req, res) => {
         dailyRoutine.completedTime = dayjs().tz("Asia/Seoul").toDate();
 
         await dailyRoutine.save();
-        console.log("Proved daily routine:", dailyRoutine);
+        console.log("인증된 일일 루틴:", dailyRoutine);
+
+        //일과달성 알림 발송
+        await notifyVIPRoutineCompletion(dailyRoutine);
+        
 
         res.json({
             status: true,
             data: dailyRoutine,
-            message: "Daily routine proved successfully"
+            message: "일일 루틴이 성공적으로 인증되었습니다"
         });
     } catch (error) {
-        console.error("Error in provingDailyRoutine:", error);
+        console.error("provingDailyRoutine 오류:", error);
         res.status(500).json({
             status: false,
             data: [],
@@ -133,12 +140,12 @@ const addReaction = async (req, res) => {
             return res.status(404).json({
                 status: false,
                 data: [],
-                message: "Daily routine not found"
+                message: "일일 루틴을 찾을 수 없습니다"
             });
         }
 
         const photo = req.filename ? `${process.env.AZURE_BLOB_BASE_URL}${req.filename}` : null;
-        console.log("photo:", photo)
+        console.log("사진:", photo)
 
         const reaction = await RoutineReaction.create({
             dailyId,
@@ -149,13 +156,16 @@ const addReaction = async (req, res) => {
             comment
         });
 
+        //리액션 알림 발송
+        await notifyNewRoutineReaction(reaction, dailyRoutine);
+
         res.json({
             status: true,
             data: reaction,
-            message: "Reaction added successfully"
+            message: "리액션이 성공적으로 추가되었습니다"
         });
     } catch (error) {
-        console.error("Error in addReaction:", error);
+        console.error("addReaction 오류:", error);
         res.status(500).json({
             status: false,
             data: [],
@@ -177,17 +187,17 @@ const getReactions = async (req, res) => {
             return res.status(404).json({
                 status: false,
                 data: [],
-                message: "No reactions found for this daily routine"
+                message: "이 일일 루틴에 대한 리액션을 찾을 수 없습니다"
             });
         }
 
         res.json({
             status: true,
             data: reactions,
-            message: "Reactions retrieved successfully"
+            message: "리액션이 성공적으로 조회되었습니다"
         });
     } catch (error) {
-        console.error("Error in getReactions:", error);
+        console.error("getReactions 오류:", error);
         res.status(500).json({
             status: false,
             data: [],

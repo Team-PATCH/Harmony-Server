@@ -44,6 +44,9 @@ async function sendGroupNotification(groupId, permissionId, alert, payload) {
   }
 }
 
+
+//QUESTION PART
+
 // 새 질문 생성 시 VIP에게 알림 보내기
 async function notifyNewQuestion(question) {
   console.log(`Notifying VIP users about new question: ${question.questionId}`);
@@ -91,7 +94,6 @@ async function notifyNewComment(comment, question) {
   };
   return await sendGroupNotification(comment.groupId, null, alert, payload);
 }
-
 // 새 메모리 카드 생성 알림 보내기
 async function notifyNewMemoryCard(memoryCard) {
   console.log(`Notifying group members about new memory card: ${memoryCard.mcId}`);
@@ -114,7 +116,65 @@ async function notifyChatMessage(chatSession) {
   return await sendGroupNotification(chatSession.groupId, null, alert, payload);
 }
 
+//ROUTINE PART
 
+async function notifyNewRoutine(routine) {
+  const alert = "새로운 일과가 등록되었습니다!";
+  const payload = {
+    routineId: routine.routineId,
+    title: routine.title,
+    days: routine.days,
+    time: routine.time
+  };
+  console.log("Notification payload:", payload);
+  try {
+    const result = await sendGroupNotification(routine.groupId, 'm', alert, payload);
+    console.log("Notification result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error in notifyNewRoutine:", error);
+    throw error;
+  }
+}
+
+// 일과 수정 시 알림 보내기
+async function notifyRoutineUpdate(routine) {
+  console.log(`Notifying all members about updated routine: ${routine.routineId}`);
+  const alert = "일과가 수정되었습니다!";
+  const payload = {
+    routineId: routine.routineId,
+    title: routine.title,
+    days: routine.days,
+    time: routine.time
+  };
+  return await sendGroupNotification(routine.groupId, null, alert, payload);
+}
+
+// VIP 일과 달성 시 멤버들에게 알림 보내기
+async function notifyVIPRoutineCompletion(dailyRoutine) {
+  console.log(`Notifying members about VIP routine completion: ${dailyRoutine.dailyId}`);
+  const alert = "VIP가 일과를 달성했습니다!";
+  const payload = {
+    dailyId: dailyRoutine.dailyId,
+    routineId: dailyRoutine.routineId,
+    title: dailyRoutine.title
+  };
+  return await sendGroupNotification(dailyRoutine.groupId, 'm', alert, payload);
+}
+
+// 새 루틴 리액션 알림 함수
+async function notifyNewRoutineReaction(reaction, dailyRoutine) {
+  console.log(`일상 루틴 ${dailyRoutine.dailyId}에 대한 새로운 리액션 알림`);
+  const alert = "새로운 리액션이 달렸습니다!";
+  const payload = {
+    dailyId: dailyRoutine.dailyId,
+    routineId: reaction.routineId,
+    reactionId: reaction.id,
+    authorId: reaction.authorId,
+    comment: reaction.comment
+  };
+  return await sendGroupNotification(reaction.groupId, null, alert, payload);
+}
 
 module.exports = {
   notifyNewQuestion,
@@ -123,4 +183,8 @@ module.exports = {
   notifyAnswerUpdate,
   notifyNewMemoryCard,
   notifyChatMessage
+  notifyNewRoutine,
+  notifyRoutineUpdate,
+  notifyVIPRoutineCompletion,
+  notifyNewRoutineReaction
 };
