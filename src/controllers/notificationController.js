@@ -182,7 +182,7 @@ module.exports = {
   notifyNewComment,
   notifyAnswerUpdate,
   notifyNewMemoryCard,
-  notifyChatMessage
+  notifyChatMessage,
   notifyNewRoutine,
   notifyRoutineUpdate,
   notifyVIPRoutineCompletion,
