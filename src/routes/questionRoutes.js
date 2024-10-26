@@ -4,6 +4,13 @@ const questionController = require('../controllers/questionController');
 
 /**
  * @swagger
+ * tags:
+ *   name: Question
+ *   description: 질문 관련 작업
+ */
+
+/**
+ * @swagger
  * /qc/providequestion:
  *   get:
  *     summary: 제공된 질문 조회
@@ -522,3 +529,44 @@ router.put('/comment/:commentId', questionController.updateComment);
 router.delete('/comment/:commentId', questionController.deleteComment);
 
 module.exports = router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Question:
+ *       type: object
+ *       properties:
+ *         questionId:
+ *           type: integer
+ *           description: 질문의 고유 ID
+ *         groupId:
+ *           type: integer
+ *           description: 해당 질문이 속한 그룹의 ID
+ *         question:
+ *           type: string
+ *           description: 질문 내용
+ *         answer:
+ *           type: string
+ *           nullable: true
+ *           description: 질문에 대한 답변 (없을 수 있음)
+ *     Comment:
+ *       type: object
+ *       properties:
+ *         commentId:
+ *           type: integer
+ *           description: 댓글의 고유 ID
+ *         questionId:
+ *           type: integer
+ *           description: 댓글이 달린 질문의 ID
+ *         authorId:
+ *           type: integer
+ *           description: 댓글 작성자의 ID
+ *         content:
+ *           type: string
+ *           description: 댓글 내용
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: 댓글 작성 시간
+ */
