@@ -10,6 +10,12 @@ const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const { createDailyRoutines } = require('./controllers/dailyRoutineController');
 const bodyParser = require('body-parser'); // 추가된 부분
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./swagger');
+
+// 여기에 console.log 추가
+//console.log(JSON.stringify(swaggerSpecs, null, 2));
+
 dotenv.config();
 
 const db = require('./models');
@@ -51,6 +57,9 @@ app.use('/mc', mcRouter);
 app.use('/qc', questionRouter);
 app.use('/routine', routineRouter);
 app.use('/dailyroutine', dailyRoutineRouter);
+
+// Swagger UI 설정
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 app.get('/', (req, res) => {
   res.send('엔드포인트임 이게 나온다면 뭔가 문제가 있다');
