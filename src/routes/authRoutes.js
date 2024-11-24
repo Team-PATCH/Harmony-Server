@@ -73,39 +73,68 @@ const authMiddleware = require('../middleware/auth');
  *                   type: string
  *                   example: "사용자 정보가 업데이트되었습니다."
  *                 user:
- *                   type: object
- *                   properties:
- *                     userId:
- *                       type: string
- *                       example: "yeojeong@naver.com"
- *                     nick:
- *                       type: string
- *                       example: "윤여정"
- *                     profile:
- *                       type: string
- *                       example: "profile.png"
- *                     authProvider:
- *                       type: string
- *                       example: "kakao"
- *                     socialToken:
- *                       type: string
- *                       example: "kakao_social_token_example"
- *                     refreshToken:
- *                       type: string
- *                       example: "kakao_refresh_token_example"
- *                     socialTokenExpiredAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-08-08T02:44:07Z"
- *                     lastLoginAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-08-08T02:44:07Z"
+ *                   $ref: '#/components/schemas/User'
  *                 token:
  *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0X3VzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3MjIzNDIwOTksImV4cCI6MTcyMjQyODQ5OX0.gzj5y5EvAeoDHuPm9CFHsr9w46ItoSAuV3dmFfRPJ9M"
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  */
 router.post('/signup', authController.signup);
+
+/**
+ * @swagger
+ * /user/apple/login:
+ *   post:
+ *     summary: Apple 로그인
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - identityToken
+ *               - refreshToken
+ *             properties:
+ *               identityToken:
+ *                 type: string
+ *                 description: Apple에서 발급받은 identity token
+ *                 example: "eyJraWQiOiJXNldjT0tC..."
+ *               refreshToken:
+ *                 type: string
+ *                 description: Apple에서 발급받은 refresh token
+ *                 example: "r4a.x.x.xxxxxxxx..."
+ *     responses:
+ *       200:
+ *         description: Apple 로그인 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid identity token"
+ */
+router.post('/apple/login', authController.verifyAppleToken);
 
 /**
  * @swagger
@@ -131,8 +160,6 @@ router.post('/signup', authController.signup);
  *         description: 사용자를 찾을 수 없음
  */
 router.get('/profile', authMiddleware.verifyToken, authController.getProfile);
-
-module.exports = router;
 
 /**
  * @swagger
@@ -161,3 +188,5 @@ module.exports = router;
  *           type: string
  *           format: date-time
  */
+
+module.exports = router;

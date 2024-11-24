@@ -1,8 +1,9 @@
 // controllers/authController.js
 const { User } = require('../models');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
+const moment = require('moment');
 require('dotenv').config();
-const moment = require('moment'); // moment 라이브러리를 추가해주세요
 
 exports.signup = async (req, res) => {
   try {
@@ -66,6 +67,69 @@ exports.signup = async (req, res) => {
   } catch (error) {
     console.error('회원가입 에러:', error);
     return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+};
+
+exports.verifyAppleToken = async (req, res) => {
+  try {
+    const { identityToken, refreshToken } = req.body;
+    
+    if (!identityToken) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Identity token이 필요합니다.' 
+      });
+    }
+
+    // Apple의 public key 가져오기
+    const response = await axios.get('https://appleid.apple.com/auth/keys');
+    const keys = response.data.keys;
+    
+    // identityToken 디코드하여 kid(Key ID) 추출
+    const decodedToken = jwt.decode(identityToken, { complete: true });
+    if (!decodedToken) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '유효하지 않은 identity token입니다.' 
+      });
+    }
+
+    // kid와 일치하는 public key 찾기
+    const kid = decodedToken.header.kid;
+    const matchingKey = keys.find(key => key.kid === kid);
+    
+    if (!matchingKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '일치하는 key를 찾을 수 없습니다.' 
+      });
+    }
+
+    // JWT 검증
+    const verified = jwt.verify(identityToken, matchingKey, {
+      algorithms: ['RS256'],
+      issuer: 'https://appleid.apple.com',
+      audience: process.env.APPLE_CLIENT_ID
+    });
+
+    // 검증 성공 후 user 정보 생성 또는 업데이트는 FE에서 /signup API를 통해 처리
+    return res.json({
+      success: true,
+      verifiedToken: verified
+    });
+
+  } catch (error) {
+    console.error('Apple 토큰 검증 에러:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(400).json({ 
+        success: false, 
+        message: '유효하지 않은 토큰입니다.' 
+      });
+    }
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
   }
 };
 
