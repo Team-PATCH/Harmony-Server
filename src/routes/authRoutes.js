@@ -5,13 +5,6 @@ const authMiddleware = require('../middleware/auth');
 
 /**
  * @swagger
- * tags:
- *   name: User
- *   description: 사용자 인증 및 프로필 관리
- */
-
-/**
- * @swagger
  * /user/signup:
  *   post:
  *     summary: 회원가입/로그인
@@ -24,7 +17,6 @@ const authMiddleware = require('../middleware/auth');
  *             type: object
  *             required:
  *               - userId
- *               - nick
  *               - authProvider
  *             properties:
  *               userId:
@@ -36,17 +28,13 @@ const authMiddleware = require('../middleware/auth');
  *               authProvider:
  *                 type: string
  *                 enum: [kakao, apple]
- *                 example: "kakao"
  *               socialToken:
  *                 type: string
- *                 example: "social_token_example"
  *               refreshToken:
  *                 type: string
- *                 example: "refresh_token_example"
  *               socialTokenExpiredAt:
  *                 type: string
  *                 format: date-time
- *                 example: "2024-08-08 02:44:07"
  *     responses:
  *       200:
  *         description: 로그인/회원가입 성공
@@ -66,26 +54,13 @@ const authMiddleware = require('../middleware/auth');
  *                     authProvider:
  *                       type: string
  *                       enum: [kakao, apple]
- *                     groups:
- *                       type: object
- *                       properties:
- *                         status:
- *                           type: string
- *                           enum: [NO_GROUP, HAS_GROUPS]
- *                         needsOnboarding:
- *                           type: boolean
- *                         groups:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               groupId:
- *                                 type: integer
- *                               name:
- *                                 type: string
- *                               role:
- *                                 type: string
- *                                 enum: [VIP, MEMBER]
+ *                     groupId:
+ *                       type: integer
+ *                       description: "-1: 그룹 없음(온보딩 필요)"
+ *                     permissionId:
+ *                       type: string
+ *                       enum: [v, m]
+ *                       description: "v: VIP, m: 일반멤버, 그룹 없는 경우 null"
  *                 token:
  *                   type: string
  *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -111,31 +86,22 @@ router.post('/signup', authController.signup);
  *                 user:
  *                   type: object
  *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       example: "yeojeong@naver.com"
  *                     nick:
  *                       type: string
+ *                       example: "윤여정"
  *                     authProvider:
  *                       type: string
  *                       enum: [kakao, apple]
- *                     groups:
- *                       type: object
- *                       properties:
- *                         status:
- *                           type: string
- *                           enum: [NO_GROUP, HAS_GROUPS]
- *                         needsOnboarding:
- *                           type: boolean
- *                         groups:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               groupId:
- *                                 type: integer
- *                               name:
- *                                 type: string
- *                               role:
- *                                 type: string
- *                                 enum: [VIP, MEMBER]
+ *                     groupId:
+ *                       type: integer
+ *                       description: 그룹이 없는 경우 -1
+ *                     permissionId:
+ *                       type: string
+ *                       enum: [v, m]
+ *                       description: v-VIP, m-일반멤버, 그룹이 없는 경우 null
  */
 router.get('/profile', authMiddleware.verifyToken, authController.getProfile);
 
