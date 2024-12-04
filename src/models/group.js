@@ -8,7 +8,7 @@ class Group extends Sequelize.Model {
           type: Sequelize.INTEGER,
           allowNull: false,
           primaryKey: true,
-          autoIncrement: true, // auto-increment 추가
+          autoIncrement: true,
         },
         name: {
           type: Sequelize.STRING(100),
@@ -18,10 +18,10 @@ class Group extends Sequelize.Model {
           type: Sequelize.STRING(200),
           allowNull: false,
         },
-        vipInviteUrl: {
-          type: Sequelize.STRING(200),
-          allowNull: true,
-        },
+        // vipInviteUrl: {
+        //   type: Sequelize.STRING(200),
+        //   allowNull: true,
+        // },
         vipId: {
           type: Sequelize.STRING(50),
           allowNull: true,
@@ -40,7 +40,7 @@ class Group extends Sequelize.Model {
   static associate(db) {
     db.Group.hasMany(db.UserGroup, { foreignKey: 'groupId', sourceKey: 'groupId' });
     db.Group.hasMany(db.MemoryCard, { foreignKey: 'groupId', sourceKey: 'groupId' });
-    db.Group.hasMany(db.Routine, { foreignKey: 'groupId', sourceKey: 'groupId' });
+    // db.Group.hasMany(db.Routine, { foreignKey: 'groupId', sourceKey: 'groupId' });
     db.Group.hasMany(db.Question, { foreignKey: 'groupId', sourceKey: 'groupId' });
   }
 }

@@ -26,31 +26,14 @@ const options = {
       {
         name: 'Group',
         description: 'API endpoints for group operations',
-      },
-      {
-        name: 'MC',
-        description: 'API endpoints for MC operations',
-      },
-      {
-        name: 'Routine',
-        description: 'API endpoints for routine operations',
-      },
-      {
-        name: 'DailyRoutine',
-        description: 'API endpoints for daily routine operations',
-      },
+      }
     ],
   },
   apis: [
-    'src/routes/*.js', //모든 라우트 파일을 포함
-    //또는 개별 지정
-    // './routes/questionRoutes.js',
-    // './routes/userRoutes.js',
-    // './routes/groupRoutes.js',
-    // './routes/mcRoutes.js',
-    // './routes/routineRoutes.js',
-    // './routes/dailyRoutineRoutes.js'
-  ], // 모든 라우트 파일 포함
+    'src/routes/questionRoutes.js',
+    'src/routes/authRoutes.js',
+    'src/routes/groupRoutes.js'
+  ],
 };
 
 const specs = swaggerJsdoc(options);
