@@ -158,3 +158,79 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 };
+
+// 프로필 업데이트
+exports.updateProfile = async (req, res) => {
+  try {
+    // upload 미들웨어는 라우터에서 처리
+    const { nick } = req.body;
+    const updateData = {};
+
+    // 닉네임 업데이트 (선택적)
+    if (nick) {
+      updateData.nick = nick;
+    }
+
+    // 프로필 이미지 업데이트 (선택적)
+    if (req.file) {
+      const baseUrl = `https://${process.env.SA_ACCOUNT_NAME}.blob.core.windows.net/${process.env.SA_CONTAINER_NAME}`;
+      updateData.profileImage = `${baseUrl}/${req.filename}`;
+    }
+
+    // 업데이트할 데이터가 없는 경우
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: '업데이트할 정보가 없습니다.' });
+    }
+
+    const user = await User.findOne({ where: { userId: req.user.userId } });
+    
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    await user.update(updateData);
+
+    const userGroup = await UserGroup.findOne({
+      where: { userId: user.userId },
+      attributes: ['groupId', 'permissionId']
+    });
+
+    res.json({
+      message: '프로필이 업데이트되었습니다.',
+      user: {
+        userId: user.userId,
+        nick: user.nick,
+        profileImage: user.profileImage,
+        authProvider: user.authProvider,
+        groupId: userGroup ? userGroup.groupId : -1,
+        permissionId: userGroup ? userGroup.permissionId : null
+      }
+    });
+  } catch (error) {
+    console.error('프로필 업데이트 에러:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+};
+
+// 로그아웃
+exports.logout = async (req, res) => {
+  try {
+    const user = await User.findOne({ where: { userId: req.user.userId } });
+    
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 소셜 토큰 정보 초기화
+    await user.update({
+      socialToken: null,
+      refreshToken: null,
+      socialTokenExpiredAt: null
+    });
+
+    res.json({ message: '로그아웃되었습니다.' });
+  } catch (error) {
+    console.error('로그아웃 에러:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+};

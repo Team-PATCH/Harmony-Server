@@ -3,6 +3,14 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/auth');
 
+const upload = require('../utils/uploadImage');  // 경로는 실제 구조에 맞게 수정해주세요
+
+router.patch('/profile', 
+  authMiddleware.verifyToken, 
+  upload.single('profileImage'),
+  authController.updateProfile
+);
+
 /**
  * @swagger
  * /user/signup:
@@ -104,5 +112,92 @@ router.post('/signup', authController.signup);
  *                       description: v-VIP, m-일반멤버, 그룹이 없는 경우 null
  */
 router.get('/profile', authMiddleware.verifyToken, authController.getProfile);
+
+/**
+ * @swagger
+ * /user/profile:
+ *   patch:
+ *     summary: 사용자 프로필 수정
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nick:
+ *                 type: string
+ *                 example: "새로운닉네임"
+ *               profileImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: "프로필 이미지 파일 (10MB 이하, jpg/jpeg/png)"
+ *     responses:
+ *       200:
+ *         description: 프로필 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "프로필이 업데이트되었습니다."
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     nick:
+ *                       type: string
+ *                     profileImage:
+ *                       type: string
+ *                       description: "Azure Blob Storage URL"
+ *                     authProvider:
+ *                       type: string
+ *                     groupId:
+ *                       type: integer
+ *                     permissionId:
+ *                       type: string
+ */
+router.patch('/profile', 
+    authMiddleware.verifyToken, 
+    (req, res, next) => {
+      profileUpload(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ 
+            message: '파일 업로드 중 오류가 발생했습니다.',
+            error: err.message 
+          });
+        }
+        next();
+      });
+    },
+    authController.updateProfile
+  );
+  
+  /**
+   * @swagger
+   * /user/logout:
+   *   post:
+   *     summary: 로그아웃
+   *     tags: [User]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: 로그아웃 성공
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "로그아웃되었습니다."
+   */
+  router.post('/logout', authMiddleware.verifyToken, authController.logout);
 
 module.exports = router;
