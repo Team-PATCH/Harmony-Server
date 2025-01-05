@@ -184,3 +184,79 @@ exports.updateOnboardingInfo = async (req, res) => {
       res.status(500).json({ message: '서버 오류가 발생했습니다.', error: error.message });
   }
 };
+
+// 사용자의 그룹 목록 조회
+exports.getUserGroups = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const userGroups = await UserGroup.findAll({
+      where: { userId },
+      include: [{
+        model: Group,
+        include: [{
+          model: UserGroup,
+          include: [{
+            model: User,
+            attributes: ['userId', 'nick', 'profile']
+          }]
+        }]
+      }],
+      order: [[Group, 'createdAt', 'DESC']]
+    });
+
+    // 각 그룹별로 필요한 정보만 추출하여 응답
+    const groupList = userGroups.map(ug => ({
+      groupId: ug.Group.groupId,
+      name: ug.Group.name,
+      permissionId: ug.permissionId,
+      myAlias: ug.alias,
+      members: ug.Group.UserGroups.map(member => ({
+        userId: member.User.userId,
+        nick: member.User.nick,
+        profile: member.User.profile,
+        alias: member.alias,
+        permissionId: member.permissionId
+      }))
+    }));
+
+    res.json({ groups: groupList });
+  } catch (error) {
+    console.error('그룹 목록 조회 에러:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+};
+
+// 특정 그룹의 초대 코드 조회 (멤버만 조회 가능)
+exports.getInviteCode = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { userId } = req.user; // auth middleware에서 제공된 사용자 정보
+
+    // 해당 그룹의 멤버인지 확인
+    const userGroup = await UserGroup.findOne({
+      where: { 
+        groupId,
+        userId
+      }
+    });
+
+    if (!userGroup) {
+      return res.status(403).json({ message: '해당 그룹의 멤버가 아닙니다.' });
+    }
+
+    const group = await Group.findByPk(groupId);
+    
+    if (!group) {
+      return res.status(404).json({ message: '그룹을 찾을 수 없습니다.' });
+    }
+
+    res.json({ 
+      inviteCode: group.inviteUrl,
+      groupName: group.name
+    });
+  } catch (error) {
+    console.error('초대 코드 조회 에러:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+};

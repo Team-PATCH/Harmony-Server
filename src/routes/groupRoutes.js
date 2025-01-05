@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const groupController = require('../controllers/groupController');
+const authMiddleware = require('../middleware/auth');
+
 
 /**
  * @swagger
@@ -172,5 +174,92 @@ router.post('/:groupId/onboarding', groupController.updateOnboardingInfo);
  *         User:
  *           $ref: '#/components/schemas/User'
  */
+
+/**
+ * @swagger
+ * /group/user/{userId}:
+ *   get:
+ *     summary: 사용자의 그룹 목록 조회
+ *     tags: [Group]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 그룹 목록을 조회할 사용자의 ID
+ *     responses:
+ *       200:
+ *         description: 그룹 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 groups:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       groupId:
+ *                         type: integer
+ *                       name:
+ *                         type: string
+ *                       permissionId:
+ *                         type: string
+ *                         enum: [v, m]
+ *                       myAlias:
+ *                         type: string
+ *                       members:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userId:
+ *                               type: string
+ *                             nick:
+ *                               type: string
+ *                             profile:
+ *                               type: string
+ *                             alias:
+ *                               type: string
+ *                             permissionId:
+ *                               type: string
+ *                               enum: [v, m]
+ */
+router.get('/user/:userId', authMiddleware.verifyToken, groupController.getUserGroups);
+
+/**
+ * @swagger
+ * /group/{groupId}/invite:
+ *   get:
+ *     summary: 그룹의 초대 코드 조회
+ *     tags: [Group]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 초대 코드를 조회할 그룹의 ID
+ *     responses:
+ *       200:
+ *         description: 초대 코드 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 inviteCode:
+ *                   type: string
+ *                   example: abc12
+ *                 groupName:
+ *                   type: string
+ */
+router.get('/:groupId/invite', authMiddleware.verifyToken, groupController.getInviteCode);
 
 module.exports = router;
