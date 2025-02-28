@@ -11,7 +11,7 @@ class User extends Sequelize.Model {
         },
         nick: {
           type: Sequelize.STRING(10),
-          allowNull: false,
+          allowNull: true,
         },
         profile: {
           type: Sequelize.STRING(200),
@@ -22,7 +22,7 @@ class User extends Sequelize.Model {
           allowNull: false,
         },
         socialToken: {
-          type: Sequelize.STRING(300),
+          type: Sequelize.STRING(1000),
           allowNull: true,
         },
         refreshToken: {

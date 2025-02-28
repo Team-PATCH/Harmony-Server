@@ -21,9 +21,9 @@ const MemoryCard = require('./memoryCard.js')
 const Tag = require('./tag.js')
 const ChatSession = require('./chatSession.js')
 const ChatMessage = require('./chatMessage.js')
-const Routine = require('./routine.js')
-const DailyRoutine = require('./dailyRoutine.js')
-const RoutineReaction = require('./routionReaction.js')
+const Routine = require('./modelsToDelete/routine.js')
+const DailyRoutine = require('./modelsToDelete/dailyRoutine.js')
+const RoutineReaction = require('./modelsToDelete/routionReaction.js')
 
 
 db.User = User;
