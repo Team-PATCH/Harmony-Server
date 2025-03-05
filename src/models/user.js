@@ -26,7 +26,7 @@ class User extends Sequelize.Model {
           allowNull: true,
         },
         refreshToken: {
-          type: Sequelize.STRING(300),
+          type: Sequelize.STRING(800),
           allowNull: true,
         },
         socialTokenExpiredAt: {
